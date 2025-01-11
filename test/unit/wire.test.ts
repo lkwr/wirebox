@@ -26,6 +26,8 @@ const expectMeta = (target: Class, expected?: ClassMeta) => {
   );
 
   expect(!!source.init).toBe(!!expected.init);
+
+  expect<Circuit | undefined>(source?.singleton).toBe(expected?.singleton);
 };
 
 describe("wire", () => {
@@ -52,7 +54,7 @@ describe("wire", () => {
     });
   });
 
-  test("wire with inputs as params", () => {
+  test("wire with inputs function", () => {
     wire(TestClass, () => [Circuit]);
 
     expectMeta(TestClass, {
@@ -60,20 +62,7 @@ describe("wire", () => {
     });
   });
 
-  test("wire with inputs and init as params", () => {
-    wire(
-      TestClass,
-      () => [Circuit],
-      () => new TestClass(),
-    );
-
-    expectMeta(TestClass, {
-      inputs: () => [Circuit],
-      init: () => new TestClass(),
-    });
-  });
-
-  test("wire with inputs object", () => {
+  test("wire with inputs", () => {
     wire(TestClass, {
       inputs: () => [Circuit],
     });
@@ -83,7 +72,7 @@ describe("wire", () => {
     });
   });
 
-  test("wire with init object", () => {
+  test("wire with init", () => {
     wire(TestClass, {
       init: () => new TestClass(),
     });
@@ -94,7 +83,7 @@ describe("wire", () => {
     });
   });
 
-  test("wire with inputs and init object", () => {
+  test("wire with inputs and init", () => {
     wire(TestClass, {
       inputs: () => [Circuit],
       init: () => new TestClass(),
@@ -103,6 +92,30 @@ describe("wire", () => {
     expectMeta(TestClass, {
       inputs: () => [Circuit],
       init: () => new TestClass(),
+    });
+  });
+
+  test("wire with default singleton", () => {
+    wire(TestClass, {
+      singleton: true,
+    });
+
+    expectMeta(TestClass, {
+      inputs: () => [],
+      singleton: Circuit.getDefault(),
+    });
+  });
+
+  test("wire with custom singleton", () => {
+    const mySingleton = new Circuit();
+
+    wire(TestClass, {
+      singleton: mySingleton,
+    });
+
+    expectMeta(TestClass, {
+      inputs: () => [],
+      singleton: mySingleton,
     });
   });
 });

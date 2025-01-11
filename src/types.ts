@@ -4,7 +4,7 @@ import type { ProvidedValue } from "./provider/types.ts";
 export type Class<
   TArgs extends readonly any[] = readonly any[],
   TReturn = any,
-> = new (...args: TArgs) => TReturn;
+> = new (...args: TArgs extends readonly never[] ? [] : TArgs) => TReturn;
 
 export type Fn<
   TArgs extends readonly any[] = readonly any[],
@@ -25,8 +25,22 @@ export type ResolvedInstances<TClasses extends readonly Class[]> = {
 };
 
 export type ClassMeta = {
+  /**
+   * Optional initializer function for the class.
+   */
   init?: InitFn<Class, Class[]>;
+
+  /**
+   * Function to resolve the inputs for the class.
+   */
   inputs: InputFn<Class[]>;
+
+  /**
+   * The circuit to use for the singleton.
+   *
+   * If not provided, the class is not a singleton.
+   */
+  singleton?: Circuit;
 };
 
 export type Context = {

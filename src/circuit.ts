@@ -49,6 +49,15 @@ export class Circuit {
     Target: TTarget,
     dependent?: Class,
   ): ResolvedInstance<TTarget> {
+    // get the class meta
+    const meta = Meta.get<ClassMeta>(Target);
+
+    // if the class is a singleton, forward the tap to the singleton circuit
+    if (meta?.singleton && meta.singleton !== this) {
+      return meta.singleton.resolve(Target, dependent);
+    }
+
+    // get the saved instance
     const savedInstance = this.instances.get(Target);
 
     // if target has an initialized instance, resolve and return it
@@ -62,8 +71,7 @@ export class Circuit {
         `Class(${Target.name}) is async and currently initializing. Use "tapAsync" instead.`,
       );
 
-    // get the class meta
-    const meta = Meta.get<ClassMeta>(Target);
+    // if the target not resolved yet and no meta is available, throw an error
     if (!meta)
       throw new Error(`Class("${Target.name}") is not registered for wiring.`);
 
@@ -96,6 +104,15 @@ export class Circuit {
     Target: TTarget,
     dependent?: Class,
   ): Promise<Wrapped<ResolvedInstance<TTarget>>> {
+    // get the class meta
+    const meta = Meta.get<ClassMeta>(Target);
+
+    // if the class is a singleton, forward the tap to the singleton circuit
+    if (meta?.singleton && meta.singleton !== this) {
+      return meta.singleton.resolveAsync(Target, dependent);
+    }
+
+    // get the saved instance
     const savedInstance = this.instances.get(Target);
 
     // if target has an initialized instance, resolve and return it
@@ -110,8 +127,7 @@ export class Circuit {
         this.resolveInstanceAsync(result, dependent),
       );
 
-    // get the class meta
-    const meta = Meta.get<ClassMeta>(Target);
+    // if the target not resolved yet and no meta is available, throw an error
     if (!meta)
       throw new Error(`Class("${Target.name}") is not registered for wiring!`);
 

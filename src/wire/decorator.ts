@@ -1,3 +1,4 @@
+import type { Circuit } from "../circuit.ts";
 import type { Class, InitFn, InputFn, ResolvedInstances } from "../types.ts";
 import { wire } from "./wire.ts";
 
@@ -16,25 +17,19 @@ export type WiredDecoratorFn = {
     inputs: InputFn<TInputs>,
   ): ClassDecorator<TTarget>;
 
-  <TTarget extends Class, const TInputs extends readonly Class[]>(
-    inputs: InputFn<TInputs>,
-    init: InitFn<TTarget, TInputs>,
-  ): ClassDecorator<TTarget>;
-
   <
     TTarget extends Class<ResolvedInstances<TInputs>>,
     const TInputs extends readonly Class[],
   >(options: {
-    inputs: InputFn<TInputs>;
+    init?: undefined;
+    inputs?: InputFn<TInputs>;
+    singleton?: Circuit | boolean;
   }): ClassDecorator<TTarget>;
 
   <TTarget extends Class, const TInputs extends readonly Class[]>(options: {
     init: InitFn<TTarget, TInputs>;
-  }): ClassDecorator<TTarget>;
-
-  <TTarget extends Class, const TInputs extends readonly Class[]>(options: {
-    inputs: InputFn<TInputs>;
-    init: InitFn<TTarget, TInputs>;
+    inputs?: InputFn<TInputs>;
+    singleton?: Circuit | boolean;
   }): ClassDecorator<TTarget>;
 };
 

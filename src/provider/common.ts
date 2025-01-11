@@ -38,11 +38,10 @@ export const createProvider = <T>(
     }
   }
 
-  wire(
-    Provider,
-    () => [],
-    (_, ctx) => new Provider(ctx),
-  );
+  wire(Provider, {
+    inputs: () => [],
+    init: (_, ctx) => new Provider(ctx),
+  });
 
   return Provider;
 };
@@ -63,11 +62,10 @@ export const createAsyncProvider = <T>(
     }
   }
 
-  wire(
-    Provider,
-    () => [],
-    (_, ctx) => new Provider(ctx),
-  );
+  wire(Provider, {
+    inputs: () => [],
+    init: (_, ctx) => new Provider(ctx),
+  });
 
   return Provider;
 };

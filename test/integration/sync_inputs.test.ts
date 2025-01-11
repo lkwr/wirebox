@@ -40,11 +40,10 @@ describe("sync inputs", () => {
       constructor(public hi: DynamicHi) {}
     }
 
-    wire(
-      DynamicHi,
-      () => [],
-      () => new DynamicHi("Alice"),
-    );
+    wire(DynamicHi, {
+      inputs: () => [],
+      init: () => new DynamicHi("Alice"),
+    });
     wire(MyClass, () => [DynamicHi]);
 
     const instance = tap(MyClass);

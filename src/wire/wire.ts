@@ -1,41 +1,37 @@
-import type { Class, ClassMeta } from "../types.ts";
+import { Circuit } from "../circuit.ts";
+import type { Class, ClassMeta, InitFn, InputFn } from "../types.ts";
 import { Meta } from "../utils/meta.ts";
 import type { WireFn } from "./types.ts";
 
-const setMeta = (target: Class, partialMeta: Partial<ClassMeta> = {}) => {
+const setMeta = (target: Class, options: WireOption = {}) => {
   Meta.set<ClassMeta>(target, {
-    inputs: partialMeta.inputs ?? (() => []),
-    init: partialMeta.init,
+    init: options.init,
+    inputs: options.inputs ?? (() => []),
+    singleton: options.singleton
+      ? options.singleton === true
+        ? Circuit.getDefault()
+        : options.singleton
+      : undefined,
   });
 };
 
-export const wire: WireFn = (target: Class, ...args: unknown[]): void => {
-  if (args.length === 0) {
-    // no options
-    return setMeta(target);
-  } else if (args.length === 1) {
-    const [param] = args;
-
-    if (typeof param === "function") {
-      // input function as parameter options
-      return setMeta(target, { inputs: param as ClassMeta["inputs"] });
-    } else if (typeof param === "object") {
-      // any object options
-      return setMeta(target, param as Partial<ClassMeta>);
-    }
-  } else if (args.length === 2) {
-    const [inputs, init] = args;
-
-    if (typeof inputs !== "function" || typeof init !== "function")
-      throw new Error("Invalid parameters");
-
-    // input and init function as parameters
-    return setMeta(target, {
-      inputs: inputs as ClassMeta["inputs"],
-      init: init as ClassMeta["init"],
-    });
-  }
+type WireOption = {
+  inputs?: InputFn<Class[]>;
+  init?: InitFn<Class, Class[]>;
+  singleton?: Circuit | boolean;
 };
+
+export const wire = ((
+  target: Class,
+  options?: InputFn<Class[]> | WireOption,
+): void => {
+  if (!options) return setMeta(target);
+
+  if (typeof options === "function")
+    return setMeta(target, { inputs: options });
+
+  return setMeta(target, options);
+}) as WireFn;
 
 export const unwire = (target: Class): void => {
   Meta.of(target).delete();
