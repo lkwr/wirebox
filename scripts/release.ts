@@ -51,7 +51,7 @@ const publishPackage = async () => {
   );
 
   const job = Bun.spawnSync(
-    ["npm", "publish", "--tag", tag, "--access", "public", "--dry-run"],
+    ["npm", "publish", "--tag", tag, "--access", "public"],
     {
       cwd: `${packagePath}`,
       stdout: "inherit",
