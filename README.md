@@ -21,7 +21,7 @@ npm install wirebox
 
 ## 🔧 Quick Start
 
-Here is a basic example of how to use WireBox, for more detailed examples, please refer to the [examples](./examples) directory.
+Here is a basic example of how to use WireBox, for more detailed examples, please refer to the [examples](https://github.com/lkwr/wirebox/tree/main/examples) directory.
 
 ### Wire up classes (declaration)
 
@@ -123,4 +123,4 @@ We use prettier to format the code, so please make sure to run `bun run format` 
 
 ## 📄 License
 
-This project is licensed under the [MIT License](./LICENSE).
+This project is licensed under the [MIT License](https://github.com/lkwr/wirebox/tree/main/LICENSE).
