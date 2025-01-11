@@ -3,6 +3,24 @@
   "version": "0.0.0",
   "type": "module",
   "module": "src/index.ts",
+  "description": "A simple but flexible dependency injection library.",
+  "keywords": [
+    "dependency injection",
+    "di",
+    "ioc",
+    "inversion of control",
+    "typescript"
+  ],
+  "homepage": "https://github.com/lkwr/wirebox#readme",
+  "bugs": {
+    "url": "https://github.com/lkwr/wirebox/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lkwr/wirebox.git"
+  },
+  "license": "MIT",
+  "author": "Lukas Heizmann",
   "scripts": {
     "format": "prettier --write .",
     "check": "bunx prettier --check .",

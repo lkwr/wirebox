@@ -15,9 +15,16 @@ const distPackageJson = {
   version: packageJson.version,
 
   type: "module",
-
   module: "index.js",
   main: "index.cjs",
+
+  description: packageJson.description,
+  keywords: packageJson.keywords,
+  homepage: packageJson.homepage,
+  bugs: packageJson.bugs,
+  repository: packageJson.repository,
+  license: packageJson.license,
+  author: packageJson.author,
 
   exports: {
     ".": {
