@@ -1,5 +1,0 @@
----
-"wirebox": minor
----
-
-Initial release
