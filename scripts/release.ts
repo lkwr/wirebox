@@ -50,13 +50,15 @@ const publishPackage = async () => {
     `Publishing ${packageJson.name}@${packageJson.version} (tag = ${tag})`,
   );
 
-  const job = Bun.spawnSync({
-    cmd: ["npm", "publish", "--tag", tag, "--access", "public", "--dry-run"],
-    cwd: `${packagePath}/dist`,
-    stdout: "inherit",
-    stderr: "inherit",
-    stdin: null,
-  });
+  const job = Bun.spawnSync(
+    ["npm", "publish", "--tag", tag, "--access", "public", "--dry-run"],
+    {
+      cwd: `${packagePath}`,
+      stdout: "inherit",
+      stderr: "inherit",
+      stdin: null,
+    },
+  );
 
   if (job.exitCode !== 0) process.exit(job.exitCode);
 };
