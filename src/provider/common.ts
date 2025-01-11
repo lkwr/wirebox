@@ -127,11 +127,11 @@ export const createAsyncDynamicProvider = <T>(
 export const withCircuit = <TTarget extends Class>(
   circuit: Circuit,
   target: TTarget,
-): ValueProvider<MaybePromise<ResolvedInstance<TTarget>>> =>
+): ValueProvider<ResolvedInstance<TTarget>> =>
   createProvider(() => circuit.tap(target));
 
 export const withCircuitAsync = <TTarget extends Class>(
   circuit: Circuit,
   target: TTarget,
-): AsyncValueProvider<MaybePromise<ResolvedInstance<TTarget>>> =>
+): AsyncValueProvider<ResolvedInstance<TTarget>> =>
   createAsyncProvider(() => circuit.tapAsync(target));
