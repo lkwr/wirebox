@@ -27,7 +27,7 @@ export type WireFn = {
   <TTarget extends Class, const TInputs extends readonly Class[]>(
     target: TTarget,
     options: {
-      init: InitFn<TTarget, TInputs>;
+      init: InitFn<TTarget, NoInfer<TInputs>>;
       inputs?: InputFn<TInputs>;
       singleton?: Circuit | boolean;
     },

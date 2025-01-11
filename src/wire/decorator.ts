@@ -27,7 +27,7 @@ export type WiredDecoratorFn = {
   }): ClassDecorator<TTarget>;
 
   <TTarget extends Class, const TInputs extends readonly Class[]>(options: {
-    init: InitFn<TTarget, TInputs>;
+    init: InitFn<TTarget, NoInfer<TInputs>>;
     inputs?: InputFn<TInputs>;
     singleton?: Circuit | boolean;
   }): ClassDecorator<TTarget>;
