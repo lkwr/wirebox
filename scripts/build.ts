@@ -3,7 +3,10 @@ import { build } from "tsup";
 import packageJson from "../package.json" with { type: "json" };
 
 await build({
-  entry: [`${import.meta.dirname}/../src/index.ts`],
+  entry: [
+    `${import.meta.dirname}/../src/index.ts`,
+    `${import.meta.dirname}/../src/provider/index.ts`,
+  ],
   outDir: `${import.meta.dirname}/../dist`,
   format: ["esm", "cjs"],
   dts: true,
@@ -31,6 +34,11 @@ const distPackageJson = {
       import: "./index.js",
       require: "./index.cjs",
       types: "./index.d.ts",
+    },
+    "./provider": {
+      import: "./provider/index.js",
+      require: "./provider/index.cjs",
+      types: "./provider/index.d.ts",
     },
     "./package.json": "./package.json",
   },
