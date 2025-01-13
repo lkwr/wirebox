@@ -21,15 +21,21 @@ export type WiredDecoratorFn = {
     TTarget extends Class<ResolvedInstances<TInputs>>,
     const TInputs extends readonly Class[],
   >(options: {
+    async?: false;
+    singleton?: Circuit | boolean;
     init?: undefined;
     inputs?: InputFn<TInputs>;
-    singleton?: Circuit | boolean;
   }): ClassDecorator<TTarget>;
 
-  <TTarget extends Class, const TInputs extends readonly Class[]>(options: {
-    init: InitFn<TTarget, NoInfer<TInputs>>;
-    inputs?: InputFn<TInputs>;
+  <
+    TTarget extends Class,
+    const TInputs extends readonly Class[],
+    const TAsync extends boolean = false,
+  >(options: {
+    async?: TAsync;
     singleton?: Circuit | boolean;
+    init: InitFn<TTarget, NoInfer<TInputs>, NoInfer<TAsync>>;
+    inputs?: InputFn<TInputs>;
   }): ClassDecorator<TTarget>;
 };
 

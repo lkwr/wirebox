@@ -18,18 +18,24 @@ export type WireFn = {
   >(
     target: TTarget,
     options: {
+      async?: false;
+      singleton?: Circuit | boolean;
       init?: undefined;
       inputs?: InputFn<TInputs>;
-      singleton?: Circuit | boolean;
     },
   ): void;
 
-  <TTarget extends Class, const TInputs extends readonly Class[]>(
+  <
+    TTarget extends Class,
+    const TInputs extends readonly Class[],
+    const TAsync extends boolean = false,
+  >(
     target: TTarget,
     options: {
-      init: InitFn<TTarget, NoInfer<TInputs>>;
-      inputs?: InputFn<TInputs>;
+      async?: TAsync;
       singleton?: Circuit | boolean;
+      init: InitFn<TTarget, NoInfer<TInputs>, NoInfer<TAsync>>;
+      inputs?: InputFn<TInputs>;
     },
   ): void;
 };

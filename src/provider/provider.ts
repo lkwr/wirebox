@@ -1,4 +1,4 @@
-import type { Context } from "../types.ts";
+import type { Class, Context } from "../types.ts";
 
 /**
  * Abstract base class for value providers.
@@ -9,7 +9,7 @@ import type { Context } from "../types.ts";
 export abstract class AbstractValueProvider<T> {
   _async: false = false;
 
-  abstract getValue(ctx: Context): T;
+  abstract getValue(ctx: Context<typeof AbstractValueProvider<T>>): T;
 }
 
 /**
@@ -21,5 +21,7 @@ export abstract class AbstractValueProvider<T> {
 export abstract class AbstractAsyncValueProvider<T> {
   _async: true = true;
 
-  abstract getValue(ctx: Context): Promise<T>;
+  abstract getValue(
+    ctx: Context<typeof AbstractAsyncValueProvider<T>>,
+  ): Promise<T>;
 }

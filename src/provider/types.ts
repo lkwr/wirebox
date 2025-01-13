@@ -9,7 +9,7 @@ import {
  */
 export type ValueProvider<T> = new (...args: any[]) => {
   _async: false;
-  getValue(ctx: Context): T;
+  getValue(ctx: Context<ValueProvider<T>>): T;
 };
 
 /**
@@ -17,7 +17,7 @@ export type ValueProvider<T> = new (...args: any[]) => {
  */
 export type AsyncValueProvider<T> = new (...args: any[]) => {
   _async: true;
-  getValue(ctx: Context): Promise<T>;
+  getValue(ctx: Context<AsyncValueProvider<T>>): Promise<T>;
 };
 
 /**

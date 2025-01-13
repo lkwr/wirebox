@@ -1,8 +1,13 @@
 import { beforeEach, describe, expect, test } from "bun:test";
 
 import { Circuit, isWired, unwire, wire } from "../../src";
-import type { Class, ClassMeta } from "../../src/types";
-import { Meta } from "../../src/utils/meta";
+import type { Class } from "../../src/types";
+import {
+  type MetaAsync,
+  type MetaInit,
+  type MetaSingleton,
+  WiredMeta,
+} from "../../src/wire/meta";
 
 const defaultCircuit = Circuit.getDefault();
 
@@ -14,35 +19,36 @@ beforeEach(() => {
   unwire(TestClass);
 });
 
-const expectMeta = (target: Class, expected?: ClassMeta) => {
-  const source = Meta.get<ClassMeta>(target);
+const expectMeta = (
+  target: Class,
+  expected?: {
+    async?: MetaAsync;
+    singleton?: MetaSingleton;
+    inputs?: Class[];
+    init?: MetaInit;
+  },
+) => {
+  const meta = WiredMeta.from(target);
 
-  expect(!!source).toBe(!!expected);
-
-  if (!source || !expected) return;
-
-  expect(source.inputs(defaultCircuit)).toEqual(
-    expected.inputs(defaultCircuit),
-  );
-
-  expect(!!source.init).toBe(!!expected.init);
-
-  expect<Circuit | undefined>(source?.singleton).toBe(expected?.singleton);
+  if (expected?.async) expect(meta.async).toBe(expected.async);
+  if (expected?.singleton) expect(meta.singleton).toBe(expected.singleton);
+  if (expected?.inputs) expect(meta.inputs()).toEqual(expected.inputs);
+  if (expected?.init) expect(meta.init).toBe(expected.init);
 };
 
 describe("wire", () => {
   test("wire and unwire", () => {
-    expect(TestClass).not.toContainKey(Meta.metaSymbol);
+    expect(TestClass).not.toContainKey(WiredMeta.symbol);
     expect(isWired(TestClass)).toBe(false);
 
     wire(TestClass);
 
-    expect(TestClass).toContainKey(Meta.metaSymbol);
+    expect(TestClass).toContainKey(WiredMeta.symbol);
     expect(isWired(TestClass)).toBe(true);
 
     unwire(TestClass);
 
-    expect(TestClass).not.toContainKey(Meta.metaSymbol);
+    expect(TestClass).not.toContainKey(WiredMeta.symbol);
     expect(isWired(TestClass)).toBe(false);
   });
 
@@ -50,7 +56,7 @@ describe("wire", () => {
     wire(TestClass);
 
     expectMeta(TestClass, {
-      inputs: () => [],
+      inputs: [],
     });
   });
 
@@ -58,7 +64,7 @@ describe("wire", () => {
     wire(TestClass, () => [Circuit]);
 
     expectMeta(TestClass, {
-      inputs: () => [Circuit],
+      inputs: [Circuit],
     });
   });
 
@@ -68,30 +74,34 @@ describe("wire", () => {
     });
 
     expectMeta(TestClass, {
-      inputs: () => [Circuit],
+      inputs: [Circuit],
     });
   });
 
   test("wire with init", () => {
+    const initFn = () => new TestClass();
+
     wire(TestClass, {
-      init: () => new TestClass(),
+      init: initFn,
     });
 
     expectMeta(TestClass, {
-      inputs: () => [],
-      init: () => new TestClass(),
+      inputs: [],
+      init: initFn,
     });
   });
 
   test("wire with inputs and init", () => {
+    const initFn = () => new TestClass();
+
     wire(TestClass, {
       inputs: () => [Circuit],
-      init: () => new TestClass(),
+      init: initFn,
     });
 
     expectMeta(TestClass, {
-      inputs: () => [Circuit],
-      init: () => new TestClass(),
+      inputs: [Circuit],
+      init: initFn,
     });
   });
 
@@ -101,7 +111,7 @@ describe("wire", () => {
     });
 
     expectMeta(TestClass, {
-      inputs: () => [],
+      inputs: [],
       singleton: Circuit.getDefault(),
     });
   });
@@ -114,7 +124,7 @@ describe("wire", () => {
     });
 
     expectMeta(TestClass, {
-      inputs: () => [],
+      inputs: [],
       singleton: mySingleton,
     });
   });

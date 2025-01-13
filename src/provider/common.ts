@@ -1,10 +1,6 @@
 import { Circuit } from "../circuit.ts";
-import type {
-  Class,
-  Context,
-  MaybePromise,
-  ResolvedInstance,
-} from "../types.ts";
+import type { Class, Context, ResolvedInstance } from "../types.ts";
+import { WiredMeta } from "../wire/meta.ts";
 import { wire } from "../wire/wire.ts";
 import {
   AbstractAsyncValueProvider,
@@ -23,12 +19,12 @@ export class BasicValueProvider<T> extends AbstractValueProvider<T> {
 }
 
 export const createProvider = <T>(
-  getValue: (ctx: Context) => T,
+  getValue: (ctx: Context<ValueProvider<T>>) => T,
 ): ValueProvider<T> => {
   class Provider extends AbstractValueProvider<T> {
     private _value: T;
 
-    constructor(ctx: Context) {
+    constructor(ctx: Context<typeof Provider>) {
       super();
       this._value = getValue(ctx);
     }
@@ -47,12 +43,12 @@ export const createProvider = <T>(
 };
 
 export const createAsyncProvider = <T>(
-  getValue: (ctx: Context) => Promise<T>,
+  getValue: (ctx: Context<AsyncValueProvider<T>>) => Promise<T>,
 ): AsyncValueProvider<T> => {
-  class Provider extends AbstractAsyncValueProvider<T> {
+  class AsyncProvider extends AbstractAsyncValueProvider<T> {
     private _value: Promise<T>;
 
-    constructor(ctx: Context) {
+    constructor(ctx: Context<typeof AsyncProvider>) {
       super();
       this._value = getValue(ctx);
     }
@@ -62,12 +58,12 @@ export const createAsyncProvider = <T>(
     }
   }
 
-  wire(Provider, {
+  wire(AsyncProvider, {
     inputs: () => [],
-    init: (_, ctx) => new Provider(ctx),
+    init: (_, ctx) => new AsyncProvider(ctx),
   });
 
-  return Provider;
+  return AsyncProvider;
 };
 
 export const createStaticProvider = <T>(value: T): ValueProvider<T> => {
@@ -85,22 +81,22 @@ export const createStaticProvider = <T>(value: T): ValueProvider<T> => {
 export const createAsyncStaticProvider = <T>(
   value: Promise<T>,
 ): AsyncValueProvider<T> => {
-  class Provider extends AbstractAsyncValueProvider<T> {
+  class AsyncProvider extends AbstractAsyncValueProvider<T> {
     override getValue(): Promise<T> {
       return value;
     }
   }
 
-  wire(Provider);
+  wire(AsyncProvider);
 
-  return Provider;
+  return AsyncProvider;
 };
 
 export const createDynamicProvider = <T>(
-  getValue: (ctx: Context) => T,
+  getValue: (ctx: Context<ValueProvider<T>>) => T,
 ): ValueProvider<T> => {
   class Provider extends AbstractValueProvider<T> {
-    override getValue(ctx: Context): T {
+    override getValue(ctx: Context<typeof Provider>): T {
       return getValue(ctx);
     }
   }
@@ -111,27 +107,39 @@ export const createDynamicProvider = <T>(
 };
 
 export const createAsyncDynamicProvider = <T>(
-  getValue: (ctx: Context) => Promise<T>,
+  getValue: (ctx: Context<AsyncValueProvider<T>>) => Promise<T>,
 ): AsyncValueProvider<T> => {
-  class Provider extends AbstractAsyncValueProvider<T> {
-    override getValue(ctx: Context): Promise<T> {
+  class AsyncProvider extends AbstractAsyncValueProvider<T> {
+    override getValue(ctx: Context<typeof AsyncProvider>): Promise<T> {
       return getValue(ctx);
     }
   }
 
-  wire(Provider);
+  wire(AsyncProvider);
 
-  return Provider;
+  return AsyncProvider;
 };
 
+/**
+ * Convert a class to an (async) value provider which provides the class instance from the given circuit.
+ *
+ * If the value provider is async depends on the given class.
+ *
+ * @param circuit The circuit to instantiate the class from.
+ * @param target The class you want with an other circuit.
+ * @returns An (async) value provider which provides the class instance from the given circuit.
+ */
 export const withCircuit = <TTarget extends Class>(
   circuit: Circuit,
   target: TTarget,
-): ValueProvider<ResolvedInstance<TTarget>> =>
-  createProvider(() => circuit.tap(target));
+):
+  | ValueProvider<ResolvedInstance<TTarget>>
+  | AsyncValueProvider<ResolvedInstance<TTarget>> => {
+  const meta = WiredMeta.from(target);
 
-export const withCircuitAsync = <TTarget extends Class>(
-  circuit: Circuit,
-  target: TTarget,
-): AsyncValueProvider<ResolvedInstance<TTarget>> =>
-  createAsyncProvider(() => circuit.tapAsync(target));
+  if (!meta.isEnabled()) throw new Error(`Class(${target.name}) is not wired.`);
+
+  return meta.async
+    ? createAsyncProvider(() => circuit.tapAsync(target))
+    : createProvider(() => circuit.tap(target));
+};
