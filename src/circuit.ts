@@ -52,7 +52,7 @@ export class Circuit<TData = unknown> {
     const meta = WiredMeta.from(target);
 
     // if the class is a singleton, forward the tap to the singleton circuit
-    if (meta?.singleton && meta.singleton !== this) {
+    if (meta.singleton && meta.singleton !== this) {
       return meta.singleton.#resolve(target, context);
     }
 
@@ -75,7 +75,8 @@ export class Circuit<TData = unknown> {
       );
 
     // if the target not resolved yet and no meta is available, throw an error
-    if (!meta) throw new Error(`Class(${target.name}) is not wired.`);
+    if (!meta.isEnabled())
+      throw new Error(`Class(${target.name}) is not wired.`);
 
     // resolve the inputs
     const inputs = this.#resolveInputs(meta.inputs(), context);
@@ -108,7 +109,7 @@ export class Circuit<TData = unknown> {
     const meta = WiredMeta.from(target);
 
     // if the class is a singleton, forward the tap to the singleton circuit
-    if (meta?.singleton && meta.singleton !== this) {
+    if (meta.singleton && meta.singleton !== this) {
       return meta.singleton.#resolveAsync(target, context);
     }
 
@@ -128,7 +129,8 @@ export class Circuit<TData = unknown> {
       );
 
     // if the target not resolved yet and no meta is available, throw an error
-    if (!meta) throw new Error(`Class(${target.name}) is not wired.`);
+    if (!meta.isEnabled())
+      throw new Error(`Class(${target.name}) is not wired.`);
 
     // resolve the inputs and initialize the class, with either the initializer or the constructor
     const initializer = this.#resolveInputsAsync(meta.inputs(), context).then(
