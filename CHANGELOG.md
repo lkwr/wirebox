@@ -1,5 +1,21 @@
 # wirebox
 
+## 0.3.0
+
+### Minor Changes
+
+- [`448ccf9`](https://github.com/lkwr/wirebox/commit/448ccf9b9639676e6452fbaef7f05a57e81f2046) Thanks [@lkwr](https://github.com/lkwr)! - feat: explicit async declaration. You need to specify if the class is has an async initializer. Now we know before initializing the class if it is async or not.
+
+- [`650bf77`](https://github.com/lkwr/wirebox/commit/650bf77fa8b61501491be7c0e32cc890bdb45613) Thanks [@lkwr](https://github.com/lkwr)! - feat: seperate providers into its own package entry
+
+- [`448ccf9`](https://github.com/lkwr/wirebox/commit/448ccf9b9639676e6452fbaef7f05a57e81f2046) Thanks [@lkwr](https://github.com/lkwr)! - feat: allow defining custom data to circuits
+
+### Patch Changes
+
+- [`89fe995`](https://github.com/lkwr/wirebox/commit/89fe9950b46e380ecb1dda192e4542fcd790de81) Thanks [@lkwr](https://github.com/lkwr)! - fix: not infer the inputs in the init function
+
+- [`27a8e55`](https://github.com/lkwr/wirebox/commit/27a8e5520baa2ff19c2753f2656df06e21bb09d3) Thanks [@lkwr](https://github.com/lkwr)! - fix wrong types at "withCircuit" and "withCircuitAsync"
+
 ## 0.2.0
 
 ### Minor Changes
