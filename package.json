@@ -32,7 +32,7 @@
     "@changesets/cli": "^2.27.11",
     "@std/semver": "npm:@jsr/std__semver@^1.0.3",
     "@trivago/prettier-plugin-sort-imports": "^5.2.1",
-    "@types/bun": "^1.1.16",
+    "@types/bun": "^1.1.17",
     "prettier": "^3.4.2",
     "tsup": "^8.3.5",
     "typescript": "^5.7.3"

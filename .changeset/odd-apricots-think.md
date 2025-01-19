@@ -1,0 +1,5 @@
+---
+"wirebox": patch
+---
+
+export WiredMeta
