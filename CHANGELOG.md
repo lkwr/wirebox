@@ -1,5 +1,11 @@
 # wirebox
 
+## 0.3.1
+
+### Patch Changes
+
+- [`125d231`](https://github.com/lkwr/wirebox/commit/125d231f2bdbe040880037fb345056011dca9517) Thanks [@lkwr](https://github.com/lkwr)! - export WiredMeta
+
 ## 0.3.0
 
 ### Minor Changes
