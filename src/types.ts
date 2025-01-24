@@ -1,5 +1,5 @@
 import type { Circuit } from "./circuit.ts";
-import type { ProvidedValue } from "./provider/types.ts";
+import type { ProvidedValue } from "./provider/provider.ts";
 
 export type Class<
   TArgs extends readonly any[] = readonly any[],
@@ -26,7 +26,7 @@ export type ResolvedInstances<TClasses extends readonly Class[]> = {
   readonly [Index in keyof TClasses]: ResolvedInstance<TClasses[Index]>;
 };
 
-export type Context<TOrigin extends Class> = {
+export type Context<TOrigin extends Class = Class> = {
   circuit: Circuit;
   target: TOrigin;
   dependent?: Class;

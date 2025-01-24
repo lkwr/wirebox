@@ -9,7 +9,7 @@ export type MetaInit =
 export type MetaSingleton = Circuit | undefined;
 
 export class WiredMeta {
-  static readonly symbol = Symbol.for("WiredMeta.symbol");
+  static readonly symbol = Symbol.for("wirebox.meta");
 
   constructor(private target: Class) {}
 

@@ -1,27 +1,38 @@
 import type { Class, Context } from "../types.ts";
 
-/**
- * Abstract base class for value providers.
- *
- * Every class thats extends from this class is treated as a value provider.
- * This means its value gets unwrapped and returned on tapping the class.
- */
-export abstract class AbstractValueProvider<T> {
-  _async: false = false;
+export const provide: unique symbol = Symbol.for("wirebox.provide");
 
-  abstract getValue(ctx: Context<typeof AbstractValueProvider<T>>): T;
-}
+export type Providable<
+  TValue = unknown,
+  TAsync extends boolean = boolean,
+  TClass extends Class = Class,
+> = {
+  [provide](): ProviderInfo;
+};
 
-/**
- * Abstract base class for async value providers.
- *
- * Every class thats extends from this class is treated as an async value provider.
- * This means its value gets unwrapped, awaited and returned on tapping the class.
- */
-export abstract class AbstractAsyncValueProvider<T> {
-  _async: true = true;
+export type ProviderInfo<
+  TValue = unknown,
+  TAsync extends boolean = boolean,
+  TClass extends Class = Class,
+> = {
+  async: TAsync;
+  getValue: (
+    ctx: Context<Class<ConstructorParameters<TClass>, InstanceType<TClass>>>,
+  ) => TAsync extends true ? Promise<TValue> : TValue;
+};
 
-  abstract getValue(
-    ctx: Context<typeof AbstractAsyncValueProvider<T>>,
-  ): Promise<T>;
-}
+export type ValueProvider<
+  TValue = unknown,
+  TAsync extends boolean = boolean,
+  TClass extends Class = Class,
+> = Class<
+  ConstructorParameters<TClass>,
+  // TODO problem here -> InstanceType<TClass> is not working as it can be any
+  unknown & Providable<TValue, TAsync, TClass>
+>;
+
+export type ProvidedValue<T> = T extends
+  | ValueProvider<infer TValue, any, any>
+  | Providable<infer TValue, any, any>
+  ? TValue
+  : never;

@@ -1,7 +1,4 @@
-import {
-  AbstractAsyncValueProvider,
-  AbstractValueProvider,
-} from "./provider/provider.ts";
+import { type ProviderInfo, provide } from "./provider/provider.ts";
 import type { Class, Context, ResolvedInstance, Wrapped } from "./types.ts";
 import { WiredMeta } from "./wire/meta.ts";
 
@@ -235,27 +232,50 @@ export class Circuit<TData = unknown> {
   }
 
   #resolveInstance(instance: unknown, context: Context<Class>): unknown {
-    if (instance instanceof AbstractValueProvider)
-      return instance.getValue(context);
+    const providerInfo = this.#resolveProviderInfo(instance, context);
+    if (!providerInfo) return instance;
 
-    if (instance instanceof AbstractAsyncValueProvider)
+    if (providerInfo.async)
       throw new Error(
-        `Class("${context.target.name}") is a async value provider and cannot be used in sync tap.`,
+        `Class("${context.target.name}") is a async provider and cannot be used in sync tap.`,
       );
 
-    return instance;
+    return providerInfo.getValue(context);
   }
 
   async #resolveInstanceAsync(
     instance: unknown,
     context: Context<Class>,
   ): Promise<Wrapped<unknown>> {
-    if (instance instanceof AbstractValueProvider)
-      return { value: instance.getValue(context) };
-    if (instance instanceof AbstractAsyncValueProvider)
-      return { value: await instance.getValue(context) };
+    const providerInfo = this.#resolveProviderInfo(instance, context);
+    if (!providerInfo) return { value: instance };
 
-    return { value: instance };
+    if (providerInfo.async) {
+      return { value: await providerInfo.getValue(context) };
+    } else {
+      return { value: providerInfo.getValue(context) };
+    }
+  }
+
+  #resolveProviderInfo(
+    instance: unknown,
+    context: Context<Class>,
+  ): ProviderInfo<unknown> | null {
+    if (typeof instance !== "object" || instance === null)
+      throw new Error(
+        `Class("${context.target.name}") provided invalid instance.`,
+      );
+
+    // if instance is not a provider, return null
+    if (!(provide in instance)) return null;
+
+    // if provider info is not a function, throw error
+    if (typeof instance[provide] !== "function")
+      throw new Error(
+        `Class("${context.target.name}") has invalid provide info.`,
+      );
+
+    return instance[provide]();
   }
 
   public static getDefault(): Circuit {

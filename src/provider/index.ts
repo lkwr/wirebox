@@ -9,11 +9,9 @@ export {
   withCircuit,
 } from "./common.ts";
 export {
-  AbstractValueProvider,
-  AbstractAsyncValueProvider,
+  type Providable,
+  type ProviderInfo,
+  provide,
+  type ProvidedValue,
+  type ValueProvider,
 } from "./provider.ts";
-export type {
-  ValueProvider,
-  AsyncValueProvider,
-  ProvidedValue,
-} from "./types.ts";
