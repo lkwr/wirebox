@@ -1,24 +1,14 @@
-import type { Class, Context } from "../types.ts";
+import type { Class, Context, NonAnyInstanceType } from "../types.ts";
 
 export const provide: unique symbol = Symbol.for("wirebox.provide");
 
-export type Providable<
-  TValue = unknown,
-  TAsync extends boolean = boolean,
-  TClass extends Class = Class,
-> = {
-  [provide](): ProviderInfo;
+export type Providable<TValue = unknown, TAsync extends boolean = boolean> = {
+  [provide]: ProviderInfo<TValue, TAsync>;
 };
 
-export type ProviderInfo<
-  TValue = unknown,
-  TAsync extends boolean = boolean,
-  TClass extends Class = Class,
-> = {
+export type ProviderInfo<TValue = unknown, TAsync extends boolean = boolean> = {
   async: TAsync;
-  getValue: (
-    ctx: Context<Class<ConstructorParameters<TClass>, InstanceType<TClass>>>,
-  ) => TAsync extends true ? Promise<TValue> : TValue;
+  getValue: (ctx: Context) => TAsync extends true ? Promise<TValue> : TValue;
 };
 
 export type ValueProvider<
@@ -27,12 +17,11 @@ export type ValueProvider<
   TClass extends Class = Class,
 > = Class<
   ConstructorParameters<TClass>,
-  // TODO problem here -> InstanceType<TClass> is not working as it can be any
-  unknown & Providable<TValue, TAsync, TClass>
+  NonAnyInstanceType<TClass> & Providable<TValue, TAsync>
 >;
 
-export type ProvidedValue<T> = T extends
-  | ValueProvider<infer TValue, any, any>
-  | Providable<infer TValue, any, any>
+export type ProvidedValue<T extends Class> = T extends
+  | ValueProvider<infer TValue>
+  | Class<any[], Providable<infer TValue>>
   ? TValue
   : never;

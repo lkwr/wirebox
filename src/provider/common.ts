@@ -1,6 +1,5 @@
 import { Circuit } from "../circuit.ts";
 import type { Class, Context, ResolvedInstance } from "../types.ts";
-import { WiredMeta } from "../wire/meta.ts";
 import { wire } from "../wire/wire.ts";
 import {
   type Providable,
@@ -12,12 +11,10 @@ import {
 export class BasicValueProvider<T> implements Providable<T, false> {
   constructor(public value: T) {}
 
-  [provide](): ProviderInfo<T, false> {
-    return {
-      async: false as const,
-      getValue: () => this.value,
-    };
-  }
+  [provide] = {
+    async: false as const,
+    getValue: () => this.value,
+  };
 }
 
 export const createProvider = <T>(
@@ -30,12 +27,10 @@ export const createProvider = <T>(
       this._value = getValue(ctx);
     }
 
-    [provide]() {
-      return {
-        async: false as const,
-        getValue: () => this._value,
-      };
-    }
+    [provide] = {
+      async: false as const,
+      getValue: () => this._value,
+    };
   }
 
   wire(Provider, {
@@ -55,12 +50,10 @@ export const createAsyncProvider = <T>(
       this._value = getValue(ctx);
     }
 
-    [provide](): ProviderInfo {
-      return {
-        async: true as const,
-        getValue: () => this._value,
-      };
-    }
+    [provide] = {
+      async: true as const,
+      getValue: () => this._value,
+    };
   }
 
   wire(AsyncProvider, {
@@ -72,12 +65,10 @@ export const createAsyncProvider = <T>(
 
 export const createStaticProvider = <T>(value: T): ValueProvider<T, false> => {
   class Provider implements Providable<T, false> {
-    [provide](): ProviderInfo<T, false> {
-      return {
-        async: false as const,
-        getValue: () => value,
-      };
-    }
+    [provide] = {
+      async: false as const,
+      getValue: () => value,
+    };
   }
 
   wire(Provider);
@@ -89,12 +80,10 @@ export const createAsyncStaticProvider = <T>(
   value: Promise<T>,
 ): ValueProvider<T, true> => {
   class AsyncProvider implements Providable<T, true> {
-    [provide](): ProviderInfo {
-      return {
-        async: true as const,
-        getValue: () => value,
-      };
-    }
+    [provide] = {
+      async: true as const,
+      getValue: () => value,
+    };
   }
 
   wire(AsyncProvider);
@@ -106,12 +95,10 @@ export const createDynamicProvider = <T>(
   getValue: (ctx: Context) => T,
 ): ValueProvider<T, false> => {
   class Provider implements Providable<T, false> {
-    [provide](): ProviderInfo<T> {
-      return {
-        async: false as const,
-        getValue: (ctx) => getValue(ctx),
-      };
-    }
+    [provide] = {
+      async: false as const,
+      getValue: (ctx: Context) => getValue(ctx),
+    };
   }
 
   wire(Provider);
@@ -123,12 +110,10 @@ export const createAsyncDynamicProvider = <T>(
   getValue: (ctx: Context) => Promise<T>,
 ): ValueProvider<T, true> => {
   class AsyncProvider implements Providable<T, true> {
-    [provide](): ProviderInfo<T> {
-      return {
-        async: true as const,
-        getValue: (ctx) => getValue(ctx),
-      };
-    }
+    [provide] = {
+      async: true as const,
+      getValue: (ctx: Context) => getValue(ctx),
+    };
   }
 
   wire(AsyncProvider);
@@ -146,17 +131,25 @@ export const createAsyncDynamicProvider = <T>(
  * @returns An (async) value provider which provides the class instance from the given circuit.
  */
 export const withCircuit = <TTarget extends Class>(
-  curcuit: Circuit,
+  circuit: Circuit,
   getTarget: () => TTarget,
 ): ValueProvider<ResolvedInstance<TTarget>> => {
-  return class WithCircuit implements Providable<ResolvedInstance<TTarget>> {
-    [provide](): ProviderInfo<ResolvedInstance<TTarget>> {
-      const target = getTarget();
-      const isAsync = WiredMeta.from(target).async;
+  class WithCircuit implements Providable<ResolvedInstance<TTarget>> {
+    [provide]: ProviderInfo<ResolvedInstance<TTarget>>;
 
-      return isAsync
-        ? { async: true, getValue: () => curcuit.tapAsync(target) }
-        : { async: false, getValue: () => curcuit.tap(target) };
+    constructor() {
+      const target = getTarget();
+      const async = circuit.isAsync(target);
+
+      this[provide] = {
+        async,
+        getValue: () =>
+          async ? circuit.tapAsync(target) : circuit.tap(target),
+      };
     }
-  };
+  }
+
+  wire(WithCircuit);
+
+  return WithCircuit as ValueProvider<ResolvedInstance<TTarget>>;
 };

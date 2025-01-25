@@ -1,4 +1,8 @@
-import { type ProviderInfo, provide } from "./provider/provider.ts";
+import {
+  type Providable,
+  type ProviderInfo,
+  provide,
+} from "./provider/provider.ts";
 import type { Class, Context, ResolvedInstance, Wrapped } from "./types.ts";
 import { WiredMeta } from "./wire/meta.ts";
 
@@ -171,11 +175,54 @@ export class Circuit<TData = unknown> {
   /**
    * Check if the given class is initialized in this circuit.
    *
-   * @param Target The class to check.
+   * @param target The class to check.
    * @returns True if the class is initialized, false otherwise.
    */
-  has<TTarget extends Class>(Target: TTarget): boolean {
-    return this.#instances.has(Target);
+  has(target: Class): boolean {
+    return this.#instances.has(target);
+  }
+
+  /**
+   * Check if the given class has async initializer
+   * or provides an async value.
+   *
+   * Classes without an async initializer will be instantiated
+   * if not yet initialized in the circuit. This is necessary to
+   * receive possible provider info.
+   *
+   * @param target The class to check.
+   * @returns True if the class has async initializer or provides an async value, false otherwise.
+   */
+  isAsync(target: Class): boolean {
+    console.log("hi1");
+    const meta = WiredMeta.from(target);
+
+    // if target has async initializer, return true
+    if (meta.async) return true;
+
+    console.log("hi2");
+
+    const ctx = this.#createContext(target);
+
+    // we need to instantiate the class here
+    // to get the provider info
+
+    // TODO change #resolve and #resolveAsync to return the raw! instance and not resolve the provider
+    // TODO resolving the provider can be done somewhere else
+    // TODO we need the raw instance here to get the provider info
+
+    const instance = this.#resolve(target, ctx);
+
+    console.log("hi");
+
+    // get the provider info
+    const providerInfo = this.#resolveProviderInfo(instance, ctx);
+
+    // if there is no provider info, return false
+    if (!providerInfo) return false;
+
+    // return the async flag from the provider info
+    return providerInfo.async;
   }
 
   #initialize(
@@ -270,12 +317,12 @@ export class Circuit<TData = unknown> {
     if (!(provide in instance)) return null;
 
     // if provider info is not a function, throw error
-    if (typeof instance[provide] !== "function")
+    if (typeof instance[provide] !== "object")
       throw new Error(
         `Class("${context.target.name}") has invalid provide info.`,
       );
 
-    return instance[provide]();
+    return (instance as Providable)[provide];
   }
 
   public static getDefault(): Circuit {
