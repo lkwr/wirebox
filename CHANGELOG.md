@@ -1,5 +1,11 @@
 # wirebox
 
+## 0.4.1
+
+### Patch Changes
+
+- [`1103a0f`](https://github.com/lkwr/wirebox/commit/1103a0fb1d301ac3c686cc172318f7b5c73de338) Thanks [@lkwr](https://github.com/lkwr)! - BREAKING! fix: use a function input for "combine" to prevent issues with circular dependencies
+
 ## 0.4.0
 
 ### Minor Changes
