@@ -1,5 +1,5 @@
 ---
-"wirebox": patch
+"wirebox": minor
 ---
 
 feat: added "combine" util
