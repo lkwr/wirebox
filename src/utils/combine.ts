@@ -19,16 +19,18 @@ export type ResolvedCombine<TTargets extends Record<string, Class>> = {
  * Combines multiple classes into a single value by resolving a record
  * of classes to a record of resolved instances.
  *
- * @param targets The record of classes to resolve.
+ * @param targets A functions which returns the record of classes to resolve.
  * @returns A value provider which returns with a record of resolved instances.
  */
 export const combine = <const TTargets extends Record<string, Class>>(
-  targets: TTargets,
+  getTargets: () => TTargets,
 ): ValueProvider<ResolvedCombine<TTargets>> => {
   class CombineProvider implements Providable<ResolvedCombine<TTargets>> {
     [provide]: ProviderInfo<ResolvedCombine<TTargets>>;
 
     constructor(circuit: Circuit) {
+      const targets = getTargets();
+
       const async = Object.values(targets).some((target) =>
         circuit.isAsync(target),
       );
@@ -36,11 +38,13 @@ export const combine = <const TTargets extends Record<string, Class>>(
       this[provide] = {
         async,
         getValue: () =>
-          async ? this.#resolveAsync(circuit) : this.#resolve(circuit),
+          async
+            ? this.#resolveAsync(circuit, targets)
+            : this.#resolve(circuit, targets),
       };
     }
 
-    #resolve(circuit: Circuit): ResolvedCombine<TTargets> {
+    #resolve(circuit: Circuit, targets: TTargets): ResolvedCombine<TTargets> {
       const resolvedEntries = Object.entries(targets).map<[string, unknown]>(
         ([key, value]) => [key, circuit.tap(value)],
       );
@@ -48,7 +52,10 @@ export const combine = <const TTargets extends Record<string, Class>>(
       return mappedEntries as ResolvedCombine<TTargets>;
     }
 
-    async #resolveAsync(circuit: Circuit): Promise<ResolvedCombine<TTargets>> {
+    async #resolveAsync(
+      circuit: Circuit,
+      targets: TTargets,
+    ): Promise<ResolvedCombine<TTargets>> {
       const entries = Object.entries(targets).map<Promise<[string, unknown]>>(
         async ([key, value]) => [key, await circuit.tapAsync(value)],
       );
