@@ -1,5 +1,13 @@
 # wirebox
 
+## 0.4.0
+
+### Minor Changes
+
+- [#5](https://github.com/lkwr/wirebox/pull/5) [`65e70c6`](https://github.com/lkwr/wirebox/commit/65e70c64f9927343f5a9ee8d244d5cb17c555967) Thanks [@lkwr](https://github.com/lkwr)! - feat: added "combine" util
+
+- [#5](https://github.com/lkwr/wirebox/pull/5) [`65e70c6`](https://github.com/lkwr/wirebox/commit/65e70c64f9927343f5a9ee8d244d5cb17c555967) Thanks [@lkwr](https://github.com/lkwr)! - BREAKING! feat: Rework provider handling
+
 ## 0.3.1
 
 ### Patch Changes
