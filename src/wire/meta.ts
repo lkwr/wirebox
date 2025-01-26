@@ -1,5 +1,5 @@
-import type { Circuit } from "../circuit";
-import type { Class, Context } from "../types";
+import type { Circuit } from "../circuit.ts";
+import type { Class, Context } from "../types.ts";
 
 export type MetaAsync = boolean;
 export type MetaInputs = () => Class[];

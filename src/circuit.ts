@@ -15,7 +15,7 @@ export class Circuit<TData = unknown> {
   /**
    * The default circuit.
    */
-  private static readonly default = new Circuit();
+  static readonly #default = new Circuit();
 
   readonly #instances = new WeakMap<Class, InstanceType<Class>>();
   readonly #asyncInitializers = new WeakMap<
@@ -23,7 +23,7 @@ export class Circuit<TData = unknown> {
     Promise<InstanceType<Class>>
   >();
 
-  readonly data: TData;
+  data: TData;
 
   constructor(data: TData = undefined as TData) {
     this.data = data;
@@ -34,16 +34,17 @@ export class Circuit<TData = unknown> {
   }
 
   tap<TTarget extends Class>(target: TTarget): ResolvedInstance<TTarget> {
-    return this.#resolve(
-      target,
-      this.#createContext(target),
-    ) as ResolvedInstance<TTarget>;
+    const ctx = this.#createContext(target);
+    const instance = this.#resolve(target, ctx);
+    return this.#resolveInstance(instance, ctx) as ResolvedInstance<TTarget>;
   }
 
-  tapAsync<TTarget extends Class>(
+  async tapAsync<TTarget extends Class>(
     target: TTarget,
   ): Promise<ResolvedInstance<TTarget>> {
-    return this.#resolveAsync(target, this.#createContext(target)).then(
+    const ctx = this.#createContext(target);
+    const instance = await this.#resolveAsync(target, ctx);
+    return this.#resolveInstanceAsync(instance, ctx).then(
       (wrapper) => wrapper.value,
     ) as Promise<ResolvedInstance<TTarget>>;
   }
@@ -61,7 +62,7 @@ export class Circuit<TData = unknown> {
     const savedInstance = this.#instances.get(target);
 
     // if target has an initialized instance, resolve and return it
-    if (savedInstance) return this.#resolveInstance(savedInstance, context);
+    if (savedInstance) return savedInstance;
 
     // if target is async and not initialized, throw an error
     if (meta.async)
@@ -88,7 +89,7 @@ export class Circuit<TData = unknown> {
     // check if the class is async
     if (instance instanceof Promise) {
       // handle the promise and save it to prevent multiple async initializations
-      this.#handlePromise(target, instance, context);
+      this.#handlePromise(target, instance);
 
       throw new Error(
         `Class(${target.name}) is async and now initializing. Use "tapAsync" instead.`,
@@ -98,14 +99,11 @@ export class Circuit<TData = unknown> {
       this.#instances.set(target, instance);
 
       // resolve and return the instance
-      return this.#resolveInstance(instance, context);
+      return instance;
     }
   }
 
-  #resolveAsync(
-    target: Class,
-    context: Context<Class>,
-  ): Promise<Wrapped<unknown>> {
+  #resolveAsync(target: Class, context: Context<Class>): Promise<unknown> {
     // get the class meta
     const meta = WiredMeta.from(target);
 
@@ -118,16 +116,12 @@ export class Circuit<TData = unknown> {
     const savedInstance = this.#instances.get(target);
 
     // if target has an initialized instance, resolve and return it
-    if (savedInstance)
-      return this.#resolveInstanceAsync(savedInstance, context);
+    if (savedInstance) return savedInstance;
 
     const asyncInitializer = this.#asyncInitializers.get(target);
 
     // if there is an async initializer, return the promise with the resolved instance
-    if (asyncInitializer)
-      return asyncInitializer.then((result: unknown) =>
-        this.#resolveInstanceAsync(result, context),
-      );
+    if (asyncInitializer) return asyncInitializer;
 
     // if the target not resolved yet and no meta is available, throw an error
     if (!meta.isEnabled())
@@ -140,7 +134,7 @@ export class Circuit<TData = unknown> {
 
     // handle the promise and save it to prevent multiple async initializations
     // and return the promise
-    return this.#handlePromise(target, initializer, context);
+    return this.#handlePromise(target, initializer);
   }
 
   /**
@@ -194,26 +188,16 @@ export class Circuit<TData = unknown> {
    * @returns True if the class has async initializer or provides an async value, false otherwise.
    */
   isAsync(target: Class): boolean {
-    console.log("hi1");
     const meta = WiredMeta.from(target);
 
     // if target has async initializer, return true
     if (meta.async) return true;
 
-    console.log("hi2");
-
     const ctx = this.#createContext(target);
 
     // we need to instantiate the class here
     // to get the provider info
-
-    // TODO change #resolve and #resolveAsync to return the raw! instance and not resolve the provider
-    // TODO resolving the provider can be done somewhere else
-    // TODO we need the raw instance here to get the provider info
-
     const instance = this.#resolve(target, ctx);
-
-    console.log("hi");
 
     // get the provider info
     const providerInfo = this.#resolveProviderInfo(instance, ctx);
@@ -239,14 +223,13 @@ export class Circuit<TData = unknown> {
   #handlePromise(
     target: Class,
     initializer: Promise<unknown>,
-    context: Context<Class>,
-  ): Promise<Wrapped<unknown>> {
+  ): Promise<unknown> {
     const newInitializer = initializer
       .then((instance) => {
         if (this.#instances.has(target))
           throw new Error(`Class(${target.name}) is already initialized.`);
         this.#instances.set(target, instance);
-        return this.#resolveInstanceAsync(instance, context);
+        return instance;
       })
       .finally(() => {
         this.#asyncInitializers.delete(target);
@@ -262,9 +245,11 @@ export class Circuit<TData = unknown> {
   }
 
   #resolveInputs(inputs: Class[], context: Context<Class>): unknown[] {
-    return inputs.map((input) =>
-      this.#resolve(input, this.#createContext(input, context.target)),
-    );
+    return inputs.map((input) => {
+      const ctx = this.#createContext(input, context.target);
+      const instance = this.#resolve(input, ctx);
+      return this.#resolveInstance(instance, ctx);
+    });
   }
 
   async #resolveInputsAsync(
@@ -272,10 +257,13 @@ export class Circuit<TData = unknown> {
     context: Context<Class>,
   ): Promise<unknown[]> {
     return Promise.all(
-      inputs.map((input) =>
-        this.#resolveAsync(input, this.#createContext(input, context.target)),
-      ),
-    ).then((resolved) => resolved.map((input) => input.value));
+      inputs.map(async (input) => {
+        const ctx = this.#createContext(input, context.target);
+        const instance = await this.#resolveAsync(input, ctx);
+        const wrapped = await this.#resolveInstanceAsync(instance, ctx);
+        return wrapped.value;
+      }),
+    );
   }
 
   #resolveInstance(instance: unknown, context: Context<Class>): unknown {
@@ -326,7 +314,7 @@ export class Circuit<TData = unknown> {
   }
 
   public static getDefault(): Circuit {
-    return Circuit.default;
+    return Circuit.#default;
   }
 }
 
