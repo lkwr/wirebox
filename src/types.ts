@@ -1,12 +1,25 @@
 import type { Circuit } from "./circuit.ts";
-import type { ProvidedValue } from "./provider/types.ts";
+import type { ProvidedValue } from "./provider/provider.ts";
 
-export type Class<
+export type AbstractClass<
   TArgs extends readonly any[] = readonly any[],
   TReturn = any,
 > = abstract new (
   ...args: TArgs extends readonly never[] ? [] : TArgs
 ) => TReturn;
+
+export type NonAbstractClass<
+  TArgs extends readonly any[] = readonly any[],
+  TReturn = any,
+> = new (...args: TArgs extends readonly never[] ? [] : TArgs) => TReturn;
+
+export type Class<
+  TArgs extends readonly any[] = readonly any[],
+  TReturn = any,
+> = NonAbstractClass<TArgs, TReturn> | AbstractClass<TArgs, TReturn>;
+
+export type NonAnyInstanceType<TClass extends Class> =
+  {} extends InstanceType<TClass> ? object : InstanceType<TClass>;
 
 export type Fn<
   TArgs extends readonly any[] = readonly any[],
@@ -18,15 +31,15 @@ export type MaybePromise<T> = T | Promise<T>;
 export type Wrapped<T> = { value: T };
 
 export type ResolvedInstance<TClass extends Class> =
-  ProvidedValue<InstanceType<TClass>> extends never
+  ProvidedValue<TClass> extends never
     ? InstanceType<TClass>
-    : ProvidedValue<InstanceType<TClass>>;
+    : ProvidedValue<TClass>;
 
 export type ResolvedInstances<TClasses extends readonly Class[]> = {
   readonly [Index in keyof TClasses]: ResolvedInstance<TClasses[Index]>;
 };
 
-export type Context<TOrigin extends Class> = {
+export type Context<TOrigin extends Class = Class> = {
   circuit: Circuit;
   target: TOrigin;
   dependent?: Class;

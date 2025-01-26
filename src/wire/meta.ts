@@ -1,5 +1,5 @@
-import type { Circuit } from "../circuit";
-import type { Class, Context } from "../types";
+import type { Circuit } from "../circuit.ts";
+import type { Class, Context } from "../types.ts";
 
 export type MetaAsync = boolean;
 export type MetaInputs = () => Class[];
@@ -9,7 +9,7 @@ export type MetaInit =
 export type MetaSingleton = Circuit | undefined;
 
 export class WiredMeta {
-  static readonly symbol = Symbol.for("WiredMeta.symbol");
+  static readonly symbol = Symbol.for("wirebox.meta");
 
   constructor(private target: Class) {}
 

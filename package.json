@@ -29,12 +29,12 @@
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.5.0",
-    "@changesets/cli": "^2.27.11",
+    "@changesets/cli": "^2.27.12",
     "@std/semver": "npm:@jsr/std__semver@^1.0.3",
     "@trivago/prettier-plugin-sort-imports": "^5.2.1",
-    "@types/bun": "^1.1.17",
+    "@types/bun": "^1.2.0",
     "prettier": "^3.4.2",
-    "tsup": "^8.3.5",
+    "tsup": "^8.3.6",
     "typescript": "^5.7.3"
   }
 }

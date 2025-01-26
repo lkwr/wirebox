@@ -6,6 +6,7 @@ await build({
   entry: [
     `${import.meta.dirname}/../src/index.ts`,
     `${import.meta.dirname}/../src/provider/index.ts`,
+    `${import.meta.dirname}/../src/utils/index.ts`,
   ],
   outDir: `${import.meta.dirname}/../dist`,
   format: ["esm", "cjs"],
@@ -30,6 +31,7 @@ const distPackageJson = {
   author: packageJson.author,
 
   exports: {
+    "./package.json": "./package.json",
     ".": {
       import: "./index.js",
       require: "./index.cjs",
@@ -40,7 +42,11 @@ const distPackageJson = {
       require: "./provider/index.cjs",
       types: "./provider/index.d.ts",
     },
-    "./package.json": "./package.json",
+    "./utils": {
+      import: "./utils/index.js",
+      require: "./utils/index.cjs",
+      types: "./utils/index.d.ts",
+    },
   },
 };
 
