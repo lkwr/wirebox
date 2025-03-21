@@ -1,5 +1,11 @@
 # wirebox
 
+## 0.4.2
+
+### Patch Changes
+
+- [`bfe5c25`](https://github.com/lkwr/wirebox/commit/bfe5c2584f94a3961780207412d10f56e12e56a9) Thanks [@lkwr](https://github.com/lkwr)! - build: minify output to reduce bundle size
+
 ## 0.4.1
 
 ### Patch Changes
