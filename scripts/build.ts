@@ -12,6 +12,10 @@ await build({
   format: ["esm", "cjs"],
   dts: true,
   clean: true,
+
+  minifySyntax: true,
+  minifyWhitespace: true,
+  minifyIdentifiers: false,
 });
 
 const distPackageJson = {
