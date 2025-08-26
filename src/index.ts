@@ -1,20 +1,29 @@
 export { Circuit, tap, tapAsync } from "./circuit.ts";
-
-export { wired } from "./wire/decorator.ts";
-export { wire, isWired, unwire } from "./wire/wire.ts";
+export { wired } from "./definition/decorator.ts";
+export { WireDefinition } from "./definition/definition.ts";
+export { isWired, unwire, wire } from "./definition/wire.ts";
 export {
-  WiredMeta,
-  type MetaAsync,
-  type MetaInit,
-  type MetaInputs,
-  type MetaSingleton,
-} from "./wire/meta.ts";
-
+  BasicValueProvider,
+  createAsyncDynamicProvider,
+  createAsyncProvider,
+  createAsyncStaticProvider,
+  createDynamicProvider,
+  createProvider,
+  createStaticProvider,
+  withCircuit,
+} from "./provider/common.ts";
+export {
+  type Providable,
+  type ProvidableClass,
+  type ProvidedValue,
+  type ProviderInfo,
+  provide,
+} from "./provider/provider.ts";
 export type {
   Class,
   Context,
-  InitFn,
-  InputFn,
+  InitializerFn,
+  InputsFn,
   ResolvedInstance,
   ResolvedInstances,
 } from "./types.ts";

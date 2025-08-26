@@ -1,14 +1,14 @@
-import { Circuit } from "../circuit.ts";
+import type { Circuit } from "../circuit.ts";
+import { wire } from "../definition/wire.ts";
 import type { Class, Context, ResolvedInstance } from "../types.ts";
-import { wire } from "../wire/wire.ts";
 import {
   type Providable,
+  type ProvidableClass,
   type ProviderInfo,
-  type ValueProvider,
   provide,
 } from "./provider.ts";
 
-export class BasicValueProvider<T> implements Providable<T, false> {
+export class BasicValueProvider<T> implements Providable<T> {
   constructor(public value: T) {}
 
   [provide] = {
@@ -17,10 +17,10 @@ export class BasicValueProvider<T> implements Providable<T, false> {
   };
 }
 
-export const createProvider = <T>(
+export const createProvider = <const T>(
   getValue: (ctx: Context) => T,
-): ValueProvider<T, false> => {
-  class Provider implements Providable<T, false> {
+): ProvidableClass<T, false, Class<[ctx: Context]>> => {
+  class Provider implements Providable<T> {
     private _value: T;
 
     constructor(ctx: Context) {
@@ -37,13 +37,13 @@ export const createProvider = <T>(
     init: (_, ctx) => new Provider(ctx),
   });
 
-  return Provider as ValueProvider<T, false>;
+  return Provider;
 };
 
-export const createAsyncProvider = <T>(
+export const createAsyncProvider = <const T>(
   getValue: (ctx: Context) => Promise<T>,
-): ValueProvider<T, true> => {
-  class AsyncProvider implements Providable<T, true> {
+): ProvidableClass<T, true, Class<[ctx: Context]>> => {
+  class AsyncProvider implements Providable<T> {
     private _value: Promise<T>;
 
     constructor(ctx: Context<typeof AsyncProvider>) {
@@ -60,10 +60,12 @@ export const createAsyncProvider = <T>(
     init: (_, ctx) => new AsyncProvider(ctx),
   });
 
-  return AsyncProvider as ValueProvider<T, true>;
+  return AsyncProvider;
 };
 
-export const createStaticProvider = <T>(value: T): ValueProvider<T, false> => {
+export const createStaticProvider = <const T>(
+  value: T,
+): ProvidableClass<T, false> => {
   class Provider implements Providable<T, false> {
     [provide] = {
       async: false as const,
@@ -76,9 +78,9 @@ export const createStaticProvider = <T>(value: T): ValueProvider<T, false> => {
   return Provider;
 };
 
-export const createAsyncStaticProvider = <T>(
+export const createAsyncStaticProvider = <const T>(
   value: Promise<T>,
-): ValueProvider<T, true> => {
+): ProvidableClass<T, true> => {
   class AsyncProvider implements Providable<T, true> {
     [provide] = {
       async: true as const,
@@ -91,9 +93,9 @@ export const createAsyncStaticProvider = <T>(
   return AsyncProvider;
 };
 
-export const createDynamicProvider = <T>(
+export const createDynamicProvider = <const T>(
   getValue: (ctx: Context) => T,
-): ValueProvider<T, false> => {
+): ProvidableClass<T, false> => {
   class Provider implements Providable<T, false> {
     [provide] = {
       async: false as const,
@@ -106,9 +108,9 @@ export const createDynamicProvider = <T>(
   return Provider;
 };
 
-export const createAsyncDynamicProvider = <T>(
+export const createAsyncDynamicProvider = <const T>(
   getValue: (ctx: Context) => Promise<T>,
-): ValueProvider<T, true> => {
+): ProvidableClass<T, true> => {
   class AsyncProvider implements Providable<T, true> {
     [provide] = {
       async: true as const,
@@ -130,10 +132,10 @@ export const createAsyncDynamicProvider = <T>(
  * @param target The class you want with an other circuit.
  * @returns An (async) value provider which provides the class instance from the given circuit.
  */
-export const withCircuit = <TTarget extends Class>(
+export const withCircuit = <const TTarget extends Class>(
   circuit: Circuit,
   getTarget: () => TTarget,
-): ValueProvider<ResolvedInstance<TTarget>> => {
+): ProvidableClass<ResolvedInstance<TTarget>> => {
   class WithCircuit implements Providable<ResolvedInstance<TTarget>> {
     [provide]: ProviderInfo<ResolvedInstance<TTarget>>;
 
@@ -151,5 +153,5 @@ export const withCircuit = <TTarget extends Class>(
 
   wire(WithCircuit);
 
-  return WithCircuit as ValueProvider<ResolvedInstance<TTarget>>;
+  return WithCircuit;
 };

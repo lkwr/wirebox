@@ -1,9 +1,9 @@
 on:
   pull_request:
-    types: [opened, reopened, synchronize, ready_for_review]
+  push:
 
 jobs:
-  pull_request:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test } from "bun:test";
 
-import { Circuit, isWired, unwire, wire } from "../../src";
+import { Circuit, unwire, wire } from "../../src";
 
 class SingletonClass {}
 

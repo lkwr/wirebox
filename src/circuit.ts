@@ -1,17 +1,17 @@
+import { WireDefinition } from "./definition/definition.ts";
 import {
   type Providable,
   type ProviderInfo,
   provide,
 } from "./provider/provider.ts";
 import type { Class, Context, ResolvedInstance, Wrapped } from "./types.ts";
-import { WiredMeta } from "./wire/meta.ts";
 
 /**
  * A circuit is a container which is responsible for managing the instances by holding and initializing them.
  *
  * Only one instance of a class can exist in a circuit.
  */
-export class Circuit<TData = unknown> {
+export class Circuit {
   /**
    * The default circuit.
    */
@@ -23,11 +23,7 @@ export class Circuit<TData = unknown> {
     Promise<InstanceType<Class>>
   >();
 
-  data: TData;
-
-  constructor(data: TData = undefined as TData) {
-    this.data = data;
-
+  constructor() {
     // install this circuit instance in the circuit itself
     // after that it is possible to use the circuit class as an input.
     this.install(Circuit, this);
@@ -50,8 +46,8 @@ export class Circuit<TData = unknown> {
   }
 
   #resolve(target: Class, context: Context<Class>): unknown {
-    // get the class meta
-    const meta = WiredMeta.from(target);
+    // get the class definition
+    const meta = WireDefinition.from(target);
 
     // if the class is a singleton, forward the tap to the singleton circuit
     if (meta.singleton && meta.singleton !== this) {
@@ -104,8 +100,8 @@ export class Circuit<TData = unknown> {
   }
 
   #resolveAsync(target: Class, context: Context<Class>): Promise<unknown> {
-    // get the class meta
-    const meta = WiredMeta.from(target);
+    // get the class definition
+    const meta = WireDefinition.from(target);
 
     // if the class is a singleton, forward the tap to the singleton circuit
     if (meta.singleton && meta.singleton !== this) {
@@ -147,7 +143,7 @@ export class Circuit<TData = unknown> {
    *
    * You can use this to manually add instances you already have initialized.
    *
-   * @param Target The class of the instance to install.
+   * @param target The class of the instance to install.
    * @param instance The instance to install.
    * @returns The instance that was installed.
    */
@@ -167,13 +163,51 @@ export class Circuit<TData = unknown> {
   }
 
   /**
-   * Check if the given class is initialized in this circuit.
+   * Uninstalling means to manually remove an instance from the circuit.
+   *
+   * This method should be used with caution!
+   *
+   * @param target The class of the instance to uninstall.
+   * @returns The instance that was uninstalled, or undefined if not found.
+   */
+  uninstall<TTarget extends Class>(
+    target: TTarget,
+  ): InstanceType<TTarget> | undefined {
+    // try to get the instance
+    const instance = this.#instances.get(target);
+
+    // if no instance was found, return undefined
+    if (!instance) return undefined;
+
+    // remove the instance from the circuit
+    this.#instances.delete(target);
+
+    // return the deleted instance
+    return instance;
+  }
+
+  /**
+   * Check if the given class is installed (initialized) in this circuit.
    *
    * @param target The class to check.
-   * @returns True if the class is initialized, false otherwise.
+   * @returns True if the class is installed (initialized), false otherwise.
    */
-  has(target: Class): boolean {
+  isInstalled(target: Class): boolean {
     return this.#instances.has(target);
+  }
+
+  /**
+   * Get the instance of the given class.
+   *
+   * NOTICE: This method is a low-level operation as it does not instantiate classes or resolve providable classes. Use it with caution.
+   *
+   * @param target The class to get the instance for.
+   * @returns The instance of the class, or undefined if not found.
+   */
+  get<TTarget extends Class>(
+    target: Class,
+  ): ResolvedInstance<TTarget> | undefined {
+    return this.#instances.get(target);
   }
 
   /**
@@ -188,7 +222,7 @@ export class Circuit<TData = unknown> {
    * @returns True if the class has async initializer or provides an async value, false otherwise.
    */
   isAsync(target: Class): boolean {
-    const meta = WiredMeta.from(target);
+    const meta = WireDefinition.from(target);
 
     // if target has async initializer, return true
     if (meta.async) return true;
@@ -211,12 +245,12 @@ export class Circuit<TData = unknown> {
 
   #initialize(
     target: Class,
-    meta: WiredMeta,
+    definition: WireDefinition,
     inputs: unknown[],
     context: Context<Class>,
   ): unknown {
-    return meta.init
-      ? meta.init(inputs, context)
+    return definition.initializer
+      ? definition.initializer(inputs, context)
       : Reflect.construct(target, inputs);
   }
 
@@ -224,7 +258,7 @@ export class Circuit<TData = unknown> {
     target: Class,
     initializer: Promise<unknown>,
   ): Promise<unknown> {
-    const newInitializer = initializer
+    const wrapped = initializer
       .then((instance) => {
         if (this.#instances.has(target))
           throw new Error(`Class(${target.name}) is already initialized.`);
@@ -234,17 +268,15 @@ export class Circuit<TData = unknown> {
       .finally(() => {
         this.#asyncInitializers.delete(target);
       });
-
-    this.#asyncInitializers.set(target, initializer);
-
-    return newInitializer;
+    this.#asyncInitializers.set(target, wrapped);
+    return wrapped;
   }
 
-  #createContext(target: Class, dependent?: Class): Context<Class> {
+  #createContext(target: Class, dependent?: Class): Context {
     return { circuit: this, target, dependent };
   }
 
-  #resolveInputs(inputs: Class[], context: Context<Class>): unknown[] {
+  #resolveInputs(inputs: Class[], context: Context): unknown[] {
     return inputs.map((input) => {
       const ctx = this.#createContext(input, context.target);
       const instance = this.#resolve(input, ctx);
