@@ -1,4 +1,3 @@
-// biome-ignore-all lint/correctness/noUnusedPrivateClassMembers: biome bug
 import type { Circuit } from "../circuit.ts";
 import type { Class, Context } from "../types.ts";
 
@@ -7,84 +6,68 @@ type InitializerFn = (inputs: unknown[], context: Context) => unknown;
 export class WireDefinition {
   static readonly symbol = Symbol.for("wirebox.definition");
 
-  constructor(private target: Class) {}
+  #async: boolean = false;
+  #singleton: Circuit | null = null;
+  #inputs: () => Class[] = () => [];
+  #initializer: InitializerFn | null = null;
 
-  // --- async ---
+  async(): boolean;
+  async(enabled: boolean): WireDefinition;
+  async(enabled?: boolean): WireDefinition | boolean {
+    if (enabled === undefined) return this.#async;
 
-  get async(): boolean {
-    return this.#get("async", false);
+    this.#async = enabled;
+    return this;
   }
 
-  set async(value: boolean) {
-    this.#set("async", value);
+  singleton(): Circuit | null;
+  singleton(circuit: Circuit | null): WireDefinition;
+  singleton(circuit?: Circuit | null): WireDefinition | Circuit | null {
+    if (circuit === undefined) return this.#singleton;
+
+    this.#singleton = circuit;
+    return this;
   }
 
-  // --- singleton ---
+  inputs(): () => Class[];
+  inputs(inputFn: () => Class[]): WireDefinition;
+  inputs(inputFn?: () => Class[]): WireDefinition | (() => Class[]) {
+    if (inputFn === undefined) return this.#inputs;
 
-  get singleton(): Circuit | undefined {
-    return this.#get("singleton", undefined);
+    this.#inputs = inputFn;
+    return this;
   }
 
-  set singleton(value: Circuit | undefined) {
-    this.#set("singleton", value);
+  initializer(): InitializerFn | null;
+  initializer(initializerFn: InitializerFn | null): WireDefinition;
+  initializer(
+    initializerFn?: InitializerFn | null,
+  ): WireDefinition | InitializerFn | null {
+    if (initializerFn === undefined) return this.#initializer;
+
+    this.#initializer = initializerFn;
+    return this;
   }
 
-  // --- inputs ---
-
-  get inputs(): () => Class[] {
-    return this.#get("inputs", () => []);
-  }
-
-  set inputs(inputFn: () => Class[]) {
-    this.#set("inputs", inputFn);
-  }
-
-  // --- initializer ---
-
-  get initializer(): InitializerFn | undefined {
-    return this.#get("init", undefined);
-  }
-
-  set initializer(initializerFn: InitializerFn) {
-    this.#set("init", initializerFn);
-  }
-
-  // --- helpers ---
-
-  enable() {
-    Reflect.defineProperty(this.target, WireDefinition.symbol, {
+  bind(target: Class): WireDefinition {
+    Reflect.defineProperty(target, WireDefinition.symbol, {
       enumerable: false,
       configurable: true,
-      value: {},
+      value: this,
     });
+
+    return this;
   }
 
-  disable() {
-    Reflect.deleteProperty(this.target, WireDefinition.symbol);
+  static from(target: Class): WireDefinition | undefined {
+    return Reflect.get(target, WireDefinition.symbol);
   }
 
-  isEnabled(): boolean {
-    return Reflect.has(this.target, WireDefinition.symbol);
-  }
+  static unbind(target: Class): WireDefinition | undefined {
+    const definition = Reflect.get(target, WireDefinition.symbol);
+    if (!definition) return undefined;
 
-  #get<T>(key: string): T | undefined;
-  #get<T>(key: string, fallback: NoInfer<T>): T;
-  #get<T>(
-    key: string,
-    fallback: NoInfer<T> | undefined = undefined,
-  ): T | undefined {
-    const meta = Reflect.get(this.target, WireDefinition.symbol);
-    if (!meta) return fallback;
-    return Reflect.get(meta, key) ?? fallback;
-  }
-
-  #set(key: string, value: unknown): void {
-    const meta = Reflect.get(this.target, WireDefinition.symbol);
-    if (!meta) throw new Error("Wire definitions are disabled");
-    Reflect.set(meta, key, value);
-  }
-
-  static from(target: Class): WireDefinition {
-    return new WireDefinition(target);
+    Reflect.deleteProperty(target, WireDefinition.symbol);
+    return definition;
   }
 }

@@ -72,35 +72,36 @@ export const wire = ((
   options?: InputsFn<Class[]> | WireOptions,
 ): void => {
   if (!options) {
-    setMeta(target);
+    setDefinition(target);
     return;
   }
 
   if (typeof options === "function") {
-    setMeta(target, { inputs: options });
+    setDefinition(target, { inputs: options });
     return;
   }
 
-  setMeta(target, options);
+  setDefinition(target, options);
 }) as WireFn;
 
 export const unwire = (target: Class): void => {
-  WireDefinition.from(target).disable();
+  WireDefinition.unbind(target);
 };
 
 export const isWired = (target: Class): boolean => {
-  return WireDefinition.from(target).isEnabled();
+  return WireDefinition.from(target) !== undefined;
 };
 
-const setMeta = (target: Class, options: WireOptions = {}): void => {
-  const meta = WireDefinition.from(target);
+const setDefinition = (target: Class, options: WireOptions = {}): void => {
+  const definition = new WireDefinition();
 
-  meta.enable();
+  definition.bind(target);
 
-  if (options.inputs) meta.inputs = options.inputs;
-  if (options.init) meta.initializer = options.init;
-  if (options.async) meta.async = options.async;
+  if (options.inputs) definition.inputs(options.inputs);
+  if (options.init) definition.initializer(options.init);
+  if (options.async) definition.async(options.async);
   if (options.singleton)
-    meta.singleton =
-      options.singleton === true ? Circuit.getDefault() : options.singleton;
+    definition.singleton(
+      options.singleton === true ? Circuit.getDefault() : options.singleton,
+    );
 };

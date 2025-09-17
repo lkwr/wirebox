@@ -46,25 +46,23 @@ export class Circuit {
   }
 
   #resolve(target: Class, context: Context<Class>): unknown {
-    // get the class definition
-    const meta = WireDefinition.from(target);
-
-    // if the class is a singleton, forward the tap to the singleton circuit
-    if (meta.singleton && meta.singleton !== this) {
-      return meta.singleton.#resolve(target, context);
-    }
-
     // get the saved instance
     const savedInstance = this.#instances.get(target);
 
     // if target has an initialized instance, resolve and return it
     if (savedInstance) return savedInstance;
 
-    // if target is async and not initialized, throw an error
-    if (meta.async)
-      throw new Error(
-        `Class(${target.name}) is async and not initialized. Use "tapAsync" instead.`,
-      );
+    // get the class definition
+    const definition = WireDefinition.from(target);
+
+    // if the target not resolved yet and no meta is available, throw an error
+    if (!definition) throw new Error(`Class(${target.name}) is not wired.`);
+
+    const singleton = definition.singleton();
+
+    // if the class is a singleton, forward the tap to the singleton circuit
+    if (singleton && singleton !== this)
+      return singleton.#resolve(target, context);
 
     // if target has an async initializer running, throw an error
     if (this.#asyncInitializers.has(target))
@@ -72,15 +70,17 @@ export class Circuit {
         `Class(${target.name}) is async and currently initializing. Use "tapAsync" instead.`,
       );
 
-    // if the target not resolved yet and no meta is available, throw an error
-    if (!meta.isEnabled())
-      throw new Error(`Class(${target.name}) is not wired.`);
+    // if target is async and not initialized, throw an error
+    if (definition.async())
+      throw new Error(
+        `Class(${target.name}) is async and not initialized. Use "tapAsync" instead.`,
+      );
 
     // resolve the inputs
-    const inputs = this.#resolveInputs(meta.inputs(), context);
+    const inputs = this.#resolveInputs(definition.inputs()(), context);
 
     // initialize the class either with the initializier if available or with the constructor
-    const instance = this.#initialize(target, meta, inputs, context);
+    const instance = this.#initialize(target, definition, inputs, context);
 
     // check if the class is async
     if (instance instanceof Promise) {
@@ -100,33 +100,35 @@ export class Circuit {
   }
 
   #resolveAsync(target: Class, context: Context<Class>): Promise<unknown> {
-    // get the class definition
-    const meta = WireDefinition.from(target);
-
-    // if the class is a singleton, forward the tap to the singleton circuit
-    if (meta.singleton && meta.singleton !== this) {
-      return meta.singleton.#resolveAsync(target, context);
-    }
-
     // get the saved instance
     const savedInstance = this.#instances.get(target);
 
     // if target has an initialized instance, resolve and return it
     if (savedInstance) return savedInstance;
 
+    // get the async initializer if already running
     const asyncInitializer = this.#asyncInitializers.get(target);
 
     // if there is an async initializer, return the promise with the resolved instance
     if (asyncInitializer) return asyncInitializer;
 
-    // if the target not resolved yet and no meta is available, throw an error
-    if (!meta.isEnabled())
-      throw new Error(`Class(${target.name}) is not wired.`);
+    // get the class definition
+    const definition = WireDefinition.from(target);
+
+    // if the target not resolved yet and no definition is available, throw an error
+    if (!definition) throw new Error(`Class(${target.name}) is not wired.`);
+
+    const singleton = definition.singleton();
+
+    // if the class is a singleton, forward the tap to the singleton circuit
+    if (singleton && singleton !== this)
+      return singleton.#resolveAsync(target, context);
 
     // resolve the inputs and initialize the class, with either the initializer or the constructor
-    const initializer = this.#resolveInputsAsync(meta.inputs(), context).then(
-      (inputs) => this.#initialize(target, meta, inputs, context),
-    );
+    const initializer = this.#resolveInputsAsync(
+      definition.inputs()(),
+      context,
+    ).then((inputs) => this.#initialize(target, definition, inputs, context));
 
     // handle the promise and save it to prevent multiple async initializations
     // and return the promise
@@ -222,10 +224,13 @@ export class Circuit {
    * @returns True if the class has async initializer or provides an async value, false otherwise.
    */
   isAsync(target: Class): boolean {
-    const meta = WireDefinition.from(target);
+    const definition = WireDefinition.from(target);
+
+    // if no definition is available, return false
+    if (!definition) return false;
 
     // if target has async initializer, return true
-    if (meta.async) return true;
+    if (definition.async()) return true;
 
     const ctx = this.#createContext(target);
 
@@ -249,8 +254,10 @@ export class Circuit {
     inputs: unknown[],
     context: Context<Class>,
   ): unknown {
-    return definition.initializer
-      ? definition.initializer(inputs, context)
+    const initializer = definition.initializer();
+
+    return initializer
+      ? initializer(inputs, context)
       : Reflect.construct(target, inputs);
   }
 
@@ -262,6 +269,7 @@ export class Circuit {
       .then((instance) => {
         if (this.#instances.has(target))
           throw new Error(`Class(${target.name}) is already initialized.`);
+
         this.#instances.set(target, instance);
         return instance;
       })

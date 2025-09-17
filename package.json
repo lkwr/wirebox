@@ -32,9 +32,9 @@
     "./package.json": "./package.json"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.2.2",
-    "@types/bun": "^1.2.21",
-    "tsdown": "^0.14.2",
+    "@biomejs/biome": "^2.2.4",
+    "@types/bun": "^1.2.22",
+    "tsdown": "^0.15.2",
     "typescript": "^5.9.2"
   },
   "files": [
