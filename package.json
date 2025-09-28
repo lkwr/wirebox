@@ -1,8 +1,8 @@
 {
   "name": "wirebox",
-  "version": "0.5.0",
+  "version": "0.4.2",
   "type": "module",
-  "module": "./dist/index.js",
+  "module": "./src/index.js",
   "description": "A simple but flexible dependency injection library.",
   "keywords": [
     "dependency injection",
@@ -24,11 +24,12 @@
   "scripts": {
     "format": "biome format --write .",
     "check": "biome check .",
-    "build": "bun run ./build.ts"
+    "build": "bun run ./build.ts",
+    "release": "npm publish --access public --provenance ./dist"
   },
   "exports": {
-    ".": "./dist/index.js",
-    "./plugin/combine": "./dist/plugin/combine.js",
+    ".": "./src/index.js",
+    "./plugin/combine": "./src/plugin/combine.js",
     "./package.json": "./package.json"
   },
   "devDependencies": {
@@ -36,11 +37,5 @@
     "@types/bun": "^1.2.22",
     "tsdown": "^0.15.5",
     "typescript": "^5.9.2"
-  },
-  "files": [
-    "./dist",
-    "CHANGELOG.md",
-    "LICENSE",
-    "README.md"
-  ]
+  }
 }

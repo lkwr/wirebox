@@ -6,7 +6,7 @@
       "devDependencies": {
         "@biomejs/biome": "^2.2.4",
         "@types/bun": "^1.2.22",
-        "tsdown": "^0.15.2",
+        "tsdown": "^0.15.5",
         "typescript": "^5.9.2",
       },
     },
