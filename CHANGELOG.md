@@ -1,5 +1,30 @@
 # wirebox
 
+## 1.0.0 (2025-09-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* restructure codebase
+
+### Features
+
+* async declaration, circuit data and some improvements ([448ccf9](https://github.com/lkwr/wirebox/commit/448ccf9b9639676e6452fbaef7f05a57e81f2046))
+* provider rework ([#5](https://github.com/lkwr/wirebox/issues/5)) ([65e70c6](https://github.com/lkwr/wirebox/commit/65e70c64f9927343f5a9ee8d244d5cb17c555967))
+* seperate providers into its own package entry ([650bf77](https://github.com/lkwr/wirebox/commit/650bf77fa8b61501491be7c0e32cc890bdb45613))
+* singleton support ([48b7535](https://github.com/lkwr/wirebox/commit/48b75353e56adcdcb30589a8f635c1b356f113ff))
+
+
+### Bug Fixes
+
+* not infer the inputs in the init function ([89fe995](https://github.com/lkwr/wirebox/commit/89fe9950b46e380ecb1dda192e4542fcd790de81))
+* use a function input for "combine" to prevent issues with circular dependencies ([1103a0f](https://github.com/lkwr/wirebox/commit/1103a0fb1d301ac3c686cc172318f7b5c73de338))
+
+
+### Code Refactoring
+
+* restructure codebase ([24462ee](https://github.com/lkwr/wirebox/commit/24462ee47d82e2e48d263fb62550fd6917b3c8de))
+
 ## 0.4.2
 
 ### Patch Changes
