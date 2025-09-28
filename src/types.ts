@@ -4,7 +4,7 @@ import type { ProvidedValue } from "./provider/provider.ts";
 export type Class<
   TArgs extends readonly any[] = readonly any[],
   TInstance = any,
-> = new (...args: TArgs) => TInstance;
+> = abstract new (...args: TArgs) => TInstance;
 
 export type MaybePromise<T> = T | Promise<T>;
 
