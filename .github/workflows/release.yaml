@@ -5,32 +5,44 @@ on:
 
 permissions:
   contents: write
+  issues: write
   pull-requests: write
-  packages: write
+
+name: release
 
 jobs:
-  release:
+  release-please:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-      - run: bun install --frozen-lockfile
-      - run: bun run check
-      - run: bun test
-      - run: bun run build
-      - name: Setup npm
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          npm config set registry https://registry.npmjs.com
-          npm config set //registry.npmjs.com/:_authToken $NPM_TOKEN
-      - name: Create release
-        uses: changesets/action@v1
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Check
+        run: bun run check
+
+      - name: Test
+        run: bun test
+
+      - uses: googleapis/release-please-action@v4
+        id: release
         with:
-          publish: bun run release
-          commit: "chore: release"
-          title: "chore: release"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          release-type: node
+
+      - name: Build
+        run: bun run build
+        if: ${{ steps.release.outputs.release_created }}
+
+      - name: Publish to npm
+        run: npm publish --access public --provenance ./dist
+        if: ${{ steps.release.outputs.release_created }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

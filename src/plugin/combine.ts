@@ -1,12 +1,12 @@
 import { Circuit } from "../circuit.ts";
+import { wire } from "../definition/wire.ts";
 import {
   type Providable,
+  type ProvidableClass,
   type ProviderInfo,
-  type ValueProvider,
   provide,
 } from "../provider/provider.ts";
 import type { Class, ResolvedInstance } from "../types.ts";
-import { wire } from "../wire/wire.ts";
 
 /**
  * Converts a record of classes to a record of resolved instances.
@@ -24,7 +24,11 @@ export type ResolvedCombine<TTargets extends Record<string, Class>> = {
  */
 export const combine = <const TTargets extends Record<string, Class>>(
   getTargets: () => TTargets,
-): ValueProvider<ResolvedCombine<TTargets>> => {
+): ProvidableClass<
+  ResolvedCombine<TTargets>,
+  boolean,
+  Class<[circuit: Circuit]>
+> => {
   class CombineProvider implements Providable<ResolvedCombine<TTargets>> {
     [provide]: ProviderInfo<ResolvedCombine<TTargets>>;
 
@@ -67,5 +71,5 @@ export const combine = <const TTargets extends Record<string, Class>>(
 
   wire(CombineProvider, () => [Circuit]);
 
-  return CombineProvider as ValueProvider<ResolvedCombine<TTargets>>;
+  return CombineProvider;
 };

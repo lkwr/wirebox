@@ -1,15 +1,8 @@
 import { beforeEach, describe, expect, test } from "bun:test";
 
 import { Circuit, isWired, unwire, wire } from "../../src";
+import { WireDefinition } from "../../src/definition/definition";
 import type { Class } from "../../src/types";
-import {
-  type MetaAsync,
-  type MetaInit,
-  type MetaSingleton,
-  WiredMeta,
-} from "../../src/wire/meta";
-
-const defaultCircuit = Circuit.getDefault();
 
 class TestClass {
   foo = "bar";
@@ -19,43 +12,45 @@ beforeEach(() => {
   unwire(TestClass);
 });
 
-const expectMeta = (
+const expectDefinition = (
   target: Class,
   expected?: {
-    async?: MetaAsync;
-    singleton?: MetaSingleton;
     inputs?: Class[];
-    init?: MetaInit;
+    initializer?: (inputs: unknown[]) => unknown;
+    async?: boolean;
+    singleton?: Circuit | null;
   },
 ) => {
-  const meta = WiredMeta.from(target);
+  const definition = WireDefinition.from(target);
 
-  if (expected?.async) expect(meta.async).toBe(expected.async);
-  if (expected?.singleton) expect(meta.singleton).toBe(expected.singleton);
-  if (expected?.inputs) expect(meta.inputs()).toEqual(expected.inputs);
-  if (expected?.init) expect(meta.init).toBe(expected.init);
+  if (expected?.async) expect(definition?.async()).toBe(expected.async);
+  if (expected?.singleton)
+    expect(definition?.singleton()).toBe(expected.singleton);
+  if (expected?.inputs) expect(definition?.inputs()()).toEqual(expected.inputs);
+  if (expected?.initializer)
+    expect(definition?.initializer()).toBe(expected.initializer);
 };
 
 describe("wire", () => {
   test("wire and unwire", () => {
-    expect(TestClass).not.toContainKey(WiredMeta.symbol);
+    expect(TestClass).not.toContainKey<any>(WireDefinition.symbol);
     expect(isWired(TestClass)).toBe(false);
 
     wire(TestClass);
 
-    expect(TestClass).toContainKey(WiredMeta.symbol);
+    expect(TestClass).toContainKey<any>(WireDefinition.symbol);
     expect(isWired(TestClass)).toBe(true);
 
     unwire(TestClass);
 
-    expect(TestClass).not.toContainKey(WiredMeta.symbol);
+    expect(TestClass).not.toContainKey<any>(WireDefinition.symbol);
     expect(isWired(TestClass)).toBe(false);
   });
 
   test("wire empty", () => {
     wire(TestClass);
 
-    expectMeta(TestClass, {
+    expectDefinition(TestClass, {
       inputs: [],
     });
   });
@@ -63,7 +58,7 @@ describe("wire", () => {
   test("wire with inputs function", () => {
     wire(TestClass, () => [Circuit]);
 
-    expectMeta(TestClass, {
+    expectDefinition(TestClass, {
       inputs: [Circuit],
     });
   });
@@ -73,21 +68,21 @@ describe("wire", () => {
       inputs: () => [Circuit],
     });
 
-    expectMeta(TestClass, {
+    expectDefinition(TestClass, {
       inputs: [Circuit],
     });
   });
 
   test("wire with init", () => {
-    const initFn = () => new TestClass();
+    const initializerFn = () => new TestClass();
 
     wire(TestClass, {
-      init: initFn,
+      init: initializerFn,
     });
 
-    expectMeta(TestClass, {
+    expectDefinition(TestClass, {
       inputs: [],
-      init: initFn,
+      initializer: initializerFn,
     });
   });
 
@@ -99,9 +94,9 @@ describe("wire", () => {
       init: initFn,
     });
 
-    expectMeta(TestClass, {
+    expectDefinition(TestClass, {
       inputs: [Circuit],
-      init: initFn,
+      initializer: initFn,
     });
   });
 
@@ -110,7 +105,7 @@ describe("wire", () => {
       singleton: true,
     });
 
-    expectMeta(TestClass, {
+    expectDefinition(TestClass, {
       inputs: [],
       singleton: Circuit.getDefault(),
     });
@@ -123,7 +118,7 @@ describe("wire", () => {
       singleton: mySingleton,
     });
 
-    expectMeta(TestClass, {
+    expectDefinition(TestClass, {
       inputs: [],
       singleton: mySingleton,
     });
