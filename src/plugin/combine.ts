@@ -24,11 +24,7 @@ export type ResolvedCombine<TTargets extends Record<string, Class>> = {
  */
 export const combine = <const TTargets extends Record<string, Class>>(
   getTargets: () => TTargets,
-): ProvidableClass<
-  ResolvedCombine<TTargets>,
-  boolean,
-  Class<[circuit: Circuit]>
-> => {
+): ProvidableClass<ResolvedCombine<TTargets>, [circuit: Circuit]> => {
   class CombineProvider implements Providable<ResolvedCombine<TTargets>> {
     [provide]: ProviderInfo<ResolvedCombine<TTargets>>;
 
@@ -45,7 +41,7 @@ export const combine = <const TTargets extends Record<string, Class>>(
           async
             ? this.#resolveAsync(circuit, targets)
             : this.#resolve(circuit, targets),
-      };
+      } as ProviderInfo<ResolvedCombine<TTargets>>;
     }
 
     #resolve(circuit: Circuit, targets: TTargets): ResolvedCombine<TTargets> {

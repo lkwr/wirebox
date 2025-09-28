@@ -10,16 +10,14 @@ import {
 
 export class BasicValueProvider<T> implements Providable<T> {
   constructor(public value: T) {}
-
   [provide] = {
-    async: false as const,
     getValue: () => this.value,
   };
 }
 
 export const createProvider = <const T>(
   getValue: (ctx: Context) => T,
-): ProvidableClass<T, false, Class<[ctx: Context]>> => {
+): ProvidableClass<T, [ctx: Context]> => {
   class Provider implements Providable<T> {
     private _value: T;
 
@@ -28,7 +26,6 @@ export const createProvider = <const T>(
     }
 
     [provide] = {
-      async: false as const,
       getValue: () => this._value,
     };
   }
@@ -42,11 +39,11 @@ export const createProvider = <const T>(
 
 export const createAsyncProvider = <const T>(
   getValue: (ctx: Context) => Promise<T>,
-): ProvidableClass<T, true, Class<[ctx: Context]>> => {
+): ProvidableClass<T, [ctx: Context]> => {
   class AsyncProvider implements Providable<T> {
     private _value: Promise<T>;
 
-    constructor(ctx: Context<typeof AsyncProvider>) {
+    constructor(ctx: Context) {
       this._value = getValue(ctx);
     }
 
@@ -65,10 +62,9 @@ export const createAsyncProvider = <const T>(
 
 export const createStaticProvider = <const T>(
   value: T,
-): ProvidableClass<T, false> => {
-  class Provider implements Providable<T, false> {
+): ProvidableClass<T, []> => {
+  class Provider implements Providable<T> {
     [provide] = {
-      async: false as const,
       getValue: () => value,
     };
   }
@@ -80,8 +76,8 @@ export const createStaticProvider = <const T>(
 
 export const createAsyncStaticProvider = <const T>(
   value: Promise<T>,
-): ProvidableClass<T, true> => {
-  class AsyncProvider implements Providable<T, true> {
+): ProvidableClass<T, []> => {
+  class AsyncProvider implements Providable<T> {
     [provide] = {
       async: true as const,
       getValue: () => value,
@@ -95,10 +91,9 @@ export const createAsyncStaticProvider = <const T>(
 
 export const createDynamicProvider = <const T>(
   getValue: (ctx: Context) => T,
-): ProvidableClass<T, false> => {
-  class Provider implements Providable<T, false> {
+): ProvidableClass<T> => {
+  class Provider implements Providable<T> {
     [provide] = {
-      async: false as const,
       getValue: (ctx: Context) => getValue(ctx),
     };
   }
@@ -110,8 +105,8 @@ export const createDynamicProvider = <const T>(
 
 export const createAsyncDynamicProvider = <const T>(
   getValue: (ctx: Context) => Promise<T>,
-): ProvidableClass<T, true> => {
-  class AsyncProvider implements Providable<T, true> {
+): ProvidableClass<T> => {
+  class AsyncProvider implements Providable<T> {
     [provide] = {
       async: true as const,
       getValue: (ctx: Context) => getValue(ctx),
@@ -147,7 +142,7 @@ export const withCircuit = <const TTarget extends Class>(
         async,
         getValue: () =>
           async ? circuit.tapAsync(target) : circuit.tap(target),
-      };
+      } as ProviderInfo<ResolvedInstance<TTarget>>;
     }
   }
 

@@ -1,6 +1,6 @@
 {
   "name": "wirebox",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "type": "module",
   "module": "./src/index.js",
   "description": "A simple but flexible dependency injection library.",

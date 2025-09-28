@@ -245,7 +245,7 @@ export class Circuit {
     if (!providerInfo) return false;
 
     // return the async flag from the provider info
-    return providerInfo.async;
+    return providerInfo.async ?? false;
   }
 
   #initialize(
