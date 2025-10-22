@@ -35,5 +35,5 @@ export type InitializerFn<
   inputs: ResolvedInstances<TInputs>,
   ctx: Context<TTarget>,
 ) => TAsync extends true
-  ? MaybePromise<InstanceType<TTarget>>
-  : InstanceType<TTarget>;
+  ? MaybePromise<ConstructorParameters<TTarget>>
+  : ConstructorParameters<TTarget>;

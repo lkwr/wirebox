@@ -5,7 +5,7 @@ import type {
   InputsFn,
   ResolvedInstances,
 } from "../types.ts";
-import { WireDefinition } from "./definition.ts";
+import { linksSymbol, WireDefinition } from "./definition.ts";
 
 export type WireFn = {
   // empty
@@ -71,17 +71,30 @@ export const wire = ((
   target: Class,
   options?: InputsFn<Class[]> | WireOptions,
 ): void => {
+  const links = target[Symbol.metadata]?.[linksSymbol] as
+    | (() => Class)[]
+    | undefined;
+
   if (!options) {
-    setDefinition(target);
+    WireDefinition.set(target, { links });
     return;
   }
 
   if (typeof options === "function") {
-    setDefinition(target, { inputs: options });
+    WireDefinition.set(target, { inputs: options, links });
     return;
   }
 
-  setDefinition(target, options);
+  WireDefinition.set(target, {
+    links,
+    inputs: options.inputs,
+    initializer: options.init,
+    async: options.async,
+    singleton:
+      options.singleton === true
+        ? Circuit.getDefault()
+        : options.singleton || null,
+  });
 }) as WireFn;
 
 export const unwire = (target: Class): void => {
@@ -90,18 +103,4 @@ export const unwire = (target: Class): void => {
 
 export const isWired = (target: Class): boolean => {
   return WireDefinition.from(target) !== undefined;
-};
-
-const setDefinition = (target: Class, options: WireOptions = {}): void => {
-  const definition = new WireDefinition();
-
-  definition.bind(target);
-
-  if (options.inputs) definition.inputs(options.inputs);
-  if (options.init) definition.initializer(options.init);
-  if (options.async) definition.async(options.async);
-  if (options.singleton)
-    definition.singleton(
-      options.singleton === true ? Circuit.getDefault() : options.singleton,
-    );
 };

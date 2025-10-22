@@ -6,6 +6,10 @@ import {
 } from "./provider/provider.ts";
 import type { Class, Context, ResolvedInstance, Wrapped } from "./types.ts";
 
+let currentCircuit: Circuit | null = null;
+
+export const getCircuit = (): Circuit | null => currentCircuit;
+
 /**
  * A circuit is a container which is responsible for managing the instances by holding and initializing them.
  *
@@ -58,11 +62,9 @@ export class Circuit {
     // if the target not resolved yet and no meta is available, throw an error
     if (!definition) throw new Error(`Class(${target.name}) is not wired.`);
 
-    const singleton = definition.singleton();
-
     // if the class is a singleton, forward the tap to the singleton circuit
-    if (singleton && singleton !== this)
-      return singleton.#resolve(target, context);
+    if (definition.singleton && definition.singleton !== this)
+      return definition.singleton.#resolve(target, context);
 
     // if target has an async initializer running, throw an error
     if (this.#asyncInitializers.has(target))
@@ -71,16 +73,21 @@ export class Circuit {
       );
 
     // if target is async and not initialized, throw an error
-    if (definition.async())
+    if (definition.async)
       throw new Error(
         `Class(${target.name}) is async and not initialized. Use "tapAsync" instead.`,
       );
 
     // resolve the inputs
-    const inputs = this.#resolveInputs(definition.inputs()(), context);
+    const inputs = this.#resolveInputs(definition.inputs(), context);
 
     // initialize the class either with the initializier if available or with the constructor
-    const instance = this.#initialize(target, definition, inputs, context);
+    const instance = this.#initialize(
+      target,
+      definition.initializer
+        ? (definition.initializer(inputs, context) as unknown[])
+        : inputs,
+    );
 
     // check if the class is async
     if (instance instanceof Promise) {
@@ -118,17 +125,23 @@ export class Circuit {
     // if the target not resolved yet and no definition is available, throw an error
     if (!definition) throw new Error(`Class(${target.name}) is not wired.`);
 
-    const singleton = definition.singleton();
-
     // if the class is a singleton, forward the tap to the singleton circuit
-    if (singleton && singleton !== this)
-      return singleton.#resolveAsync(target, context);
+    if (definition.singleton && definition.singleton !== this)
+      return definition.singleton.#resolveAsync(target, context);
 
     // resolve the inputs and initialize the class, with either the initializer or the constructor
     const initializer = this.#resolveInputsAsync(
-      definition.inputs()(),
+      definition.inputs(),
+      definition.links.map((link) => link()),
       context,
-    ).then((inputs) => this.#initialize(target, definition, inputs, context));
+    ).then(async (inputs) =>
+      this.#initialize(
+        target,
+        definition.initializer
+          ? await definition.initializer(inputs, context)
+          : inputs,
+      ),
+    );
 
     // handle the promise and save it to prevent multiple async initializations
     // and return the promise
@@ -230,7 +243,7 @@ export class Circuit {
     if (!definition) return false;
 
     // if target has async initializer, return true
-    if (definition.async()) return true;
+    if (definition.async) return true;
 
     const ctx = this.#createContext(target);
 
@@ -248,17 +261,15 @@ export class Circuit {
     return providerInfo.async ?? false;
   }
 
-  #initialize(
-    target: Class,
-    definition: WireDefinition,
-    inputs: unknown[],
-    context: Context<Class>,
-  ): unknown {
-    const initializer = definition.initializer();
+  #initialize(target: Class, args: unknown[]): unknown {
+    const previousCircuit = currentCircuit;
 
-    return initializer
-      ? initializer(inputs, context)
-      : Reflect.construct(target, inputs);
+    try {
+      currentCircuit = this;
+      return Reflect.construct(target, args);
+    } finally {
+      currentCircuit = previousCircuit;
+    }
   }
 
   #handlePromise(
@@ -294,16 +305,29 @@ export class Circuit {
 
   async #resolveInputsAsync(
     inputs: Class[],
+    links: Class[],
     context: Context<Class>,
   ): Promise<unknown[]> {
-    return Promise.all(
-      inputs.map(async (input) => {
-        const ctx = this.#createContext(input, context.target);
-        const instance = await this.#resolveAsync(input, ctx);
-        const wrapped = await this.#resolveInstanceAsync(instance, ctx);
-        return wrapped.value;
-      }),
-    );
+    const [result] = await Promise.all([
+      Promise.all(
+        inputs.map(async (input) => {
+          const ctx = this.#createContext(input, context.target);
+          const instance = await this.#resolveAsync(input, ctx);
+          const wrapped = await this.#resolveInstanceAsync(instance, ctx);
+          return wrapped.value;
+        }),
+      ),
+      Promise.all(
+        links.map(async (link) => {
+          const ctx = this.#createContext(link, context.target);
+          const instance = await this.#resolveAsync(link, ctx);
+          const wrapped = await this.#resolveInstanceAsync(instance, ctx);
+          return wrapped.value;
+        }),
+      ),
+    ]);
+
+    return result;
   }
 
   #resolveInstance(instance: unknown, context: Context<Class>): unknown {

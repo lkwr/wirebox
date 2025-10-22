@@ -1,15 +1,21 @@
-import type { Circuit } from "../circuit.ts";
+import { Circuit, getCircuit } from "../circuit.ts";
 import type {
   Class,
   InitializerFn,
   InputsFn,
+  ResolvedInstance,
   ResolvedInstances,
 } from "../types.ts";
-import { wire } from "./wire.ts";
+import { linksSymbol, WireDefinition } from "./definition.ts";
 
 export type ClassDecorator<TTarget extends Class> = (
   target: TTarget,
   context: ClassDecoratorContext<TTarget>,
+) => void;
+
+export type ClassFieldDecorator<T> = (
+  target: undefined,
+  context: ClassFieldDecoratorContext<unknown, T>,
 ) => void;
 
 export type WiredDecoratorFn = {
@@ -58,11 +64,57 @@ export type WiredDecoratorFn = {
   }): ClassDecorator<TTarget>;
 };
 
+type WiredOptions = {
+  inputs?: InputsFn<Class[]>;
+  init?: InitializerFn<Class, Class[], boolean>;
+  async?: boolean;
+  singleton?: Circuit | boolean;
+};
+
 export const wired: WiredDecoratorFn = (
-  ...args: unknown[]
+  options?: InputsFn<Class[]> | WiredOptions,
 ): ClassDecorator<Class> => {
-  return (target) => {
-    const wireArgs = [target, ...args] as Parameters<typeof wire>;
-    wire(...wireArgs);
+  return (target, context) => {
+    const links = context.metadata[linksSymbol] as (() => Class)[] | undefined;
+
+    if (!options) {
+      WireDefinition.set(target, { links });
+      return;
+    }
+
+    if (typeof options === "function") {
+      WireDefinition.set(target, { inputs: options, links });
+      return;
+    }
+
+    WireDefinition.set(target, {
+      links,
+      inputs: options.inputs,
+      initializer: options.init,
+      async: options.async,
+      singleton:
+        options.singleton === true
+          ? Circuit.getDefault()
+          : options.singleton || null,
+    });
+  };
+};
+
+export const linked = <T extends Class>(
+  target: () => T,
+): ClassFieldDecorator<ResolvedInstance<T>> => {
+  return (_, context) => {
+    context.metadata[linksSymbol] ??= [];
+    const links = context.metadata[linksSymbol] as (() => Class)[];
+
+    links.push(target);
+
+    context.addInitializer(function () {
+      const circuit = getCircuit();
+      if (!circuit)
+        throw new Error("No circuit available in context for linked injection");
+
+      context.access.set(this, circuit.tap(target()));
+    });
   };
 };

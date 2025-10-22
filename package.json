@@ -28,14 +28,14 @@
     "release": "bun run build && npm publish --access public ./dist"
   },
   "exports": {
-    ".": "./src/index.js",
-    "./plugin/combine": "./src/plugin/combine.js",
+    ".": "./src/index.ts",
+    "./plugin/combine": "./src/plugin/combine.ts",
     "./package.json": "./package.json"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.2.4",
-    "@types/bun": "^1.2.22",
-    "tsdown": "^0.15.5",
-    "typescript": "^5.9.2"
+    "@biomejs/biome": "^2.2.7",
+    "@types/bun": "^1.3.0",
+    "tsdown": "^0.15.9",
+    "typescript": "^5.9.3"
   }
 }

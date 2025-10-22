@@ -1,53 +1,22 @@
 import type { Circuit } from "../circuit.ts";
-import type { Class, Context } from "../types.ts";
+import type { Class, Context, MaybePromise } from "../types.ts";
 
-type InitializerFn = (inputs: unknown[], context: Context) => unknown;
+export const linksSymbol = Symbol.for("wirebox.definition.links");
+
+type InitializerFn = (
+  inputs: unknown[],
+  context: Context,
+) => MaybePromise<unknown[]>;
 
 export class WireDefinition {
   static readonly symbol = Symbol.for("wirebox.definition");
 
-  #async: boolean = false;
-  #singleton: Circuit | null = null;
-  #inputs: () => Class[] = () => [];
-  #initializer: InitializerFn | null = null;
-
-  async(): boolean;
-  async(enabled: boolean): WireDefinition;
-  async(enabled?: boolean): WireDefinition | boolean {
-    if (enabled === undefined) return this.#async;
-
-    this.#async = enabled;
-    return this;
-  }
-
-  singleton(): Circuit | null;
-  singleton(circuit: Circuit | null): WireDefinition;
-  singleton(circuit?: Circuit | null): WireDefinition | Circuit | null {
-    if (circuit === undefined) return this.#singleton;
-
-    this.#singleton = circuit;
-    return this;
-  }
-
-  inputs(): () => Class[];
-  inputs(inputFn: () => Class[]): WireDefinition;
-  inputs(inputFn?: () => Class[]): WireDefinition | (() => Class[]) {
-    if (inputFn === undefined) return this.#inputs;
-
-    this.#inputs = inputFn;
-    return this;
-  }
-
-  initializer(): InitializerFn | null;
-  initializer(initializerFn: InitializerFn | null): WireDefinition;
-  initializer(
-    initializerFn?: InitializerFn | null,
-  ): WireDefinition | InitializerFn | null {
-    if (initializerFn === undefined) return this.#initializer;
-
-    this.#initializer = initializerFn;
-    return this;
-  }
+  // biome-ignore lint/complexity/useLiteralKeys: formatter cannot handle this
+  ["async"]: boolean = false;
+  singleton: Circuit | null = null;
+  inputs: () => Class[] = () => [];
+  links: (() => Class)[] = [];
+  initializer: InitializerFn | null = null;
 
   bind(target: Class): WireDefinition {
     Reflect.defineProperty(target, WireDefinition.symbol, {
@@ -69,5 +38,17 @@ export class WireDefinition {
 
     Reflect.deleteProperty(target, WireDefinition.symbol);
     return definition;
+  }
+
+  static set(target: Class, options: Partial<WireDefinition> = {}): void {
+    const definition = new WireDefinition();
+
+    definition.bind(target);
+
+    if (options.inputs) definition.inputs = options.inputs;
+    if (options.links) definition.links = options.links;
+    if (options.initializer) definition.initializer = options.initializer;
+    if (options.async) definition.async = options.async;
+    if (options.singleton) definition.singleton = options.singleton;
   }
 }

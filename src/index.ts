@@ -1,5 +1,5 @@
 export { Circuit, tap, tapAsync } from "./circuit.ts";
-export { wired } from "./definition/decorator.ts";
+export { linked, wired } from "./definition/decorator.ts";
 export { WireDefinition } from "./definition/definition.ts";
 export { isWired, unwire, wire } from "./definition/wire.ts";
 export {

@@ -31,7 +31,7 @@ export const createProvider = <const T>(
   }
 
   wire(Provider, {
-    init: (_, ctx) => new Provider(ctx),
+    init: (_, ctx) => [ctx] as const,
   });
 
   return Provider;
@@ -54,7 +54,7 @@ export const createAsyncProvider = <const T>(
   }
 
   wire(AsyncProvider, {
-    init: (_, ctx) => new AsyncProvider(ctx),
+    init: (_, ctx) => [ctx] as const,
   });
 
   return AsyncProvider;
