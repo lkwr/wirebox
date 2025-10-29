@@ -1,5 +1,5 @@
 import { Circuit } from "../circuit.ts";
-import { wire } from "../definition/wire.ts";
+import { setRequires } from "../definition/decorators.ts";
 import {
   type Providable,
   type ProvidableClass,
@@ -65,7 +65,7 @@ export const combine = <const TTargets extends Record<string, Class>>(
     }
   }
 
-  wire(CombineProvider, () => [Circuit]);
+  setRequires(CombineProvider, () => [Circuit]);
 
   return CombineProvider;
 };

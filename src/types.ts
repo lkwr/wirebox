@@ -15,9 +15,12 @@ export type ResolvedInstance<TClass extends Class> =
     ? InstanceType<TClass>
     : ProvidedValue<TClass>;
 
-export type ResolvedInstances<TClasses extends readonly Class[]> = {
-  readonly [TKey in keyof TClasses]: ResolvedInstance<TClasses[TKey]>;
-};
+export type ResolvedInstances<TClasses extends readonly Class[]> =
+  TClasses extends never[]
+    ? readonly []
+    : {
+        readonly [TKey in keyof TClasses]: ResolvedInstance<TClasses[TKey]>;
+      };
 
 export type Context<TOrigin extends Class = Class> = {
   circuit: Circuit;
@@ -32,7 +35,7 @@ export type InitializerFn<
   TInputs extends readonly Class[],
   TAsync extends boolean,
 > = (
-  inputs: ResolvedInstances<TInputs>,
+  dependencies: ResolvedInstances<TInputs>,
   ctx: Context<TTarget>,
 ) => TAsync extends true
   ? MaybePromise<ConstructorParameters<TTarget>>

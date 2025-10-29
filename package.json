@@ -30,6 +30,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./plugin/combine": "./src/plugin/combine.ts",
+    "./plugin/lazy": "./src/plugin/lazy.ts",
     "./package.json": "./package.json"
   },
   "devDependencies": {

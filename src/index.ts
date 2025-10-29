@@ -1,7 +1,22 @@
 export { Circuit, tap, tapAsync } from "./circuit.ts";
-export { linked, wired } from "./definition/decorator.ts";
+export {
+  isWired,
+  link,
+  preconstruct,
+  preconstructAsync,
+  preloads,
+  requires,
+  setPreconstruct,
+  setPreconstructAsync,
+  setPreloads,
+  setRequires,
+  setSingleton,
+  setStandalone,
+  singleton,
+  standalone,
+  unwire,
+} from "./definition/decorators.ts";
 export { WireDefinition } from "./definition/definition.ts";
-export { isWired, unwire, wire } from "./definition/wire.ts";
 export {
   BasicValueProvider,
   createAsyncDynamicProvider,

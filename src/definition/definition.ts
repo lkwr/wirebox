@@ -1,22 +1,22 @@
 import type { Circuit } from "../circuit.ts";
-import type { Class, Context, MaybePromise } from "../types.ts";
+import type { Class, Context } from "../types.ts";
 
-export const linksSymbol = Symbol.for("wirebox.definition.links");
+export const preloadsSymbol = Symbol.for("wirebox.definition.preloads");
 
-type InitializerFn = (
-  inputs: unknown[],
+export type PreconstructFn = (
+  dependencies: readonly unknown[],
   context: Context,
-) => MaybePromise<unknown[]>;
+) => unknown | Promise<unknown | (() => unknown)>;
 
 export class WireDefinition {
   static readonly symbol = Symbol.for("wirebox.definition");
 
   // biome-ignore lint/complexity/useLiteralKeys: formatter cannot handle this
   ["async"]: boolean = false;
-  singleton: Circuit | null = null;
-  inputs: () => Class[] = () => [];
-  links: (() => Class)[] = [];
-  initializer: InitializerFn | null = null;
+  singleton?: Circuit;
+  dependencies?: () => readonly Class[];
+  preloads?: () => readonly Class[];
+  preconstruct?: PreconstructFn;
 
   bind(target: Class): WireDefinition {
     Reflect.defineProperty(target, WireDefinition.symbol, {
@@ -28,8 +28,25 @@ export class WireDefinition {
     return this;
   }
 
-  static from(target: Class): WireDefinition | undefined {
-    return Reflect.get(target, WireDefinition.symbol);
+  static from(
+    target: Class,
+    createIfNotExists?: false,
+  ): WireDefinition | undefined;
+  static from(target: Class, createIfNotExists: true): WireDefinition;
+
+  static from(
+    target: Class,
+    createIfNotExists = false,
+  ): WireDefinition | undefined {
+    let definition = Reflect.get(target, WireDefinition.symbol);
+    if (!createIfNotExists) return definition;
+
+    if (!definition) {
+      definition = new WireDefinition();
+      definition.bind(target);
+    }
+
+    return definition;
   }
 
   static unbind(target: Class): WireDefinition | undefined {
@@ -45,9 +62,9 @@ export class WireDefinition {
 
     definition.bind(target);
 
-    if (options.inputs) definition.inputs = options.inputs;
-    if (options.links) definition.links = options.links;
-    if (options.initializer) definition.initializer = options.initializer;
+    if (options.dependencies) definition.dependencies = options.dependencies;
+    if (options.preloads) definition.preloads = options.preloads;
+    if (options.preconstruct) definition.preconstruct = options.preconstruct;
     if (options.async) definition.async = options.async;
     if (options.singleton) definition.singleton = options.singleton;
   }

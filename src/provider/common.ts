@@ -1,5 +1,5 @@
 import type { Circuit } from "../circuit.ts";
-import { wire } from "../definition/wire.ts";
+import { setPreconstruct, setStandalone } from "../definition/decorators.ts";
 import type { Class, Context, ResolvedInstance } from "../types.ts";
 import {
   type Providable,
@@ -30,9 +30,7 @@ export const createProvider = <const T>(
     };
   }
 
-  wire(Provider, {
-    init: (_, ctx) => [ctx] as const,
-  });
+  setPreconstruct(Provider, (_, ctx) => new Provider(ctx));
 
   return Provider;
 };
@@ -53,9 +51,7 @@ export const createAsyncProvider = <const T>(
     };
   }
 
-  wire(AsyncProvider, {
-    init: (_, ctx) => [ctx] as const,
-  });
+  setPreconstruct(AsyncProvider, (_, ctx) => new AsyncProvider(ctx));
 
   return AsyncProvider;
 };
@@ -69,7 +65,7 @@ export const createStaticProvider = <const T>(
     };
   }
 
-  wire(Provider);
+  setStandalone(Provider);
 
   return Provider;
 };
@@ -84,7 +80,7 @@ export const createAsyncStaticProvider = <const T>(
     };
   }
 
-  wire(AsyncProvider);
+  setStandalone(AsyncProvider);
 
   return AsyncProvider;
 };
@@ -98,7 +94,7 @@ export const createDynamicProvider = <const T>(
     };
   }
 
-  wire(Provider);
+  setStandalone(Provider);
 
   return Provider;
 };
@@ -113,7 +109,7 @@ export const createAsyncDynamicProvider = <const T>(
     };
   }
 
-  wire(AsyncProvider);
+  setStandalone(AsyncProvider);
 
   return AsyncProvider;
 };
@@ -146,7 +142,7 @@ export const withCircuit = <const TTarget extends Class>(
     }
   }
 
-  wire(WithCircuit);
+  setStandalone(WithCircuit);
 
   return WithCircuit;
 };

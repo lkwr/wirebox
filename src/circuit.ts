@@ -1,4 +1,5 @@
 import { WireDefinition } from "./definition/definition.ts";
+import { AsyncDependencyError, UnwiredError } from "./errors.ts";
 import {
   type Providable,
   type ProviderInfo,
@@ -8,7 +9,7 @@ import type { Class, Context, ResolvedInstance, Wrapped } from "./types.ts";
 
 let currentCircuit: Circuit | null = null;
 
-export const getCircuit = (): Circuit | null => currentCircuit;
+export const getCurrentCircuit = (): Circuit | null => currentCircuit;
 
 /**
  * A circuit is a container which is responsible for managing the instances by holding and initializing them.
@@ -60,7 +61,7 @@ export class Circuit {
     const definition = WireDefinition.from(target);
 
     // if the target not resolved yet and no meta is available, throw an error
-    if (!definition) throw new Error(`Class(${target.name}) is not wired.`);
+    if (!definition) throw new UnwiredError(target);
 
     // if the class is a singleton, forward the tap to the singleton circuit
     if (definition.singleton && definition.singleton !== this)
@@ -68,25 +69,22 @@ export class Circuit {
 
     // if target has an async initializer running, throw an error
     if (this.#asyncInitializers.has(target))
-      throw new Error(
-        `Class(${target.name}) is async and currently initializing. Use "tapAsync" instead.`,
-      );
+      throw new AsyncDependencyError(target, true);
 
     // if target is async and not initialized, throw an error
-    if (definition.async)
-      throw new Error(
-        `Class(${target.name}) is async and not initialized. Use "tapAsync" instead.`,
-      );
+    if (definition.async) throw new AsyncDependencyError(target, false);
 
     // resolve the inputs
-    const inputs = this.#resolveInputs(definition.inputs(), context);
+    const inputs = this.#resolveDependencies(
+      definition.dependencies?.() ?? [],
+      context,
+    );
 
-    // initialize the class either with the initializier if available or with the constructor
-    const instance = this.#initialize(
-      target,
-      definition.initializer
-        ? (definition.initializer(inputs, context) as unknown[])
-        : inputs,
+    // initialize the class either with the preconstruct if available or with the constructor
+    const instance = this.#runWithCircuit(() =>
+      definition.preconstruct
+        ? definition.preconstruct(inputs, context)
+        : Reflect.construct(target, inputs),
     );
 
     // check if the class is async
@@ -94,9 +92,7 @@ export class Circuit {
       // handle the promise and save it to prevent multiple async initializations
       this.#handlePromise(target, instance);
 
-      throw new Error(
-        `Class(${target.name}) is async and now initializing. Use "tapAsync" instead.`,
-      );
+      throw new AsyncDependencyError(target, true);
     } else {
       // save the instance to prevent multiple initializations
       this.#instances.set(target, instance);
@@ -123,23 +119,22 @@ export class Circuit {
     const definition = WireDefinition.from(target);
 
     // if the target not resolved yet and no definition is available, throw an error
-    if (!definition) throw new Error(`Class(${target.name}) is not wired.`);
+    if (!definition) throw new UnwiredError(target);
 
     // if the class is a singleton, forward the tap to the singleton circuit
     if (definition.singleton && definition.singleton !== this)
       return definition.singleton.#resolveAsync(target, context);
 
     // resolve the inputs and initialize the class, with either the initializer or the constructor
-    const initializer = this.#resolveInputsAsync(
-      definition.inputs(),
-      definition.links.map((link) => link()),
+    const initializer = this.resolveDependenciesAsync(
+      definition.dependencies?.() ?? [],
+      definition.preloads?.() ?? [],
       context,
-    ).then(async (inputs) =>
-      this.#initialize(
-        target,
-        definition.initializer
-          ? await definition.initializer(inputs, context)
-          : inputs,
+    ).then((inputs) =>
+      this.#runWithCircuit(() =>
+        definition.preconstruct
+          ? definition.preconstruct(inputs, context)
+          : Reflect.construct(target, inputs),
       ),
     );
 
@@ -261,12 +256,12 @@ export class Circuit {
     return providerInfo.async ?? false;
   }
 
-  #initialize(target: Class, args: unknown[]): unknown {
+  #runWithCircuit<T>(fn: () => T): T {
     const previousCircuit = currentCircuit;
 
     try {
       currentCircuit = this;
-      return Reflect.construct(target, args);
+      return fn();
     } finally {
       currentCircuit = previousCircuit;
     }
@@ -277,9 +272,14 @@ export class Circuit {
     initializer: Promise<unknown>,
   ): Promise<unknown> {
     const wrapped = initializer
-      .then((instance) => {
+      .then((result) => {
         if (this.#instances.has(target))
           throw new Error(`Class(${target.name}) is already initialized.`);
+
+        const instance =
+          typeof result === "function"
+            ? this.#runWithCircuit(() => result())
+            : result;
 
         this.#instances.set(target, instance);
         return instance;
@@ -295,7 +295,7 @@ export class Circuit {
     return { circuit: this, target, dependent };
   }
 
-  #resolveInputs(inputs: Class[], context: Context): unknown[] {
+  #resolveDependencies(inputs: readonly Class[], context: Context): unknown[] {
     return inputs.map((input) => {
       const ctx = this.#createContext(input, context.target);
       const instance = this.#resolve(input, ctx);
@@ -303,24 +303,24 @@ export class Circuit {
     });
   }
 
-  async #resolveInputsAsync(
-    inputs: Class[],
-    links: Class[],
+  async resolveDependenciesAsync(
+    dependencies: readonly Class[],
+    preloads: readonly Class[],
     context: Context<Class>,
   ): Promise<unknown[]> {
     const [result] = await Promise.all([
       Promise.all(
-        inputs.map(async (input) => {
-          const ctx = this.#createContext(input, context.target);
-          const instance = await this.#resolveAsync(input, ctx);
+        dependencies.map(async (dependency) => {
+          const ctx = this.#createContext(dependency, context.target);
+          const instance = await this.#resolveAsync(dependency, ctx);
           const wrapped = await this.#resolveInstanceAsync(instance, ctx);
           return wrapped.value;
         }),
       ),
       Promise.all(
-        links.map(async (link) => {
-          const ctx = this.#createContext(link, context.target);
-          const instance = await this.#resolveAsync(link, ctx);
+        preloads.map(async (preload) => {
+          const ctx = this.#createContext(preload, context.target);
+          const instance = await this.#resolveAsync(preload, ctx);
           const wrapped = await this.#resolveInstanceAsync(instance, ctx);
           return wrapped.value;
         }),
