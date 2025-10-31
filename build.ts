@@ -3,11 +3,7 @@ import { build } from "tsdown";
 import packageJson from "./package.json" with { type: "json" };
 
 await build({
-  entry: [
-    `${import.meta.dirname}/src/index.ts`,
-    // plugins
-    `${import.meta.dirname}/src/plugin/combine.ts`,
-  ],
+  entry: [`${import.meta.dirname}/src/index.ts`],
   outDir: `${import.meta.dirname}/dist`,
   format: "esm",
   dts: true,
@@ -28,10 +24,6 @@ const distPackage = {
     ".": {
       import: "./index.js",
       types: "./index.d.ts",
-    },
-    "./plugin/combine": {
-      import: "./plugin/combine.js",
-      types: "./plugin/combine.d.ts",
     },
     "./package.json": "./package.json",
   },
