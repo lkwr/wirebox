@@ -26,7 +26,7 @@ Here is a basic example of how to use WireBox, for more detailed examples, pleas
 ### Wire up classes (declaration)
 
 ```ts
-import { wire } from "wirebox";
+import { setStandalone } from "wirebox";
 
 class LoggerService {
   log(message: string) {
@@ -34,15 +34,15 @@ class LoggerService {
   }
 }
 
-wire(LoggerService);
+setStandalone(LoggerService);
 ```
 
 or using the decorator syntax:
 
 ```ts
-import { wired } from "wirebox";
+import { standalone } from "wirebox";
 
-@wired()
+@standalone()
 class LoggerService {
   log(message: string) {
     console.log(message);
@@ -55,8 +55,8 @@ class LoggerService {
 ```ts
 import { LoggerService } from "./logger.ts";
 
-// configure your inputs to wire up
-@wired(() => [LoggerService])
+// configure your dependencies to wire up
+@requires(() => [LoggerService])
 class Database {
   constructor(private logger: LoggerService) {}
 
@@ -72,7 +72,7 @@ class Database {
 }
 
 // or without the decorator
-wire(Database, () => [LoggerService]);
+setRequires(Database, () => [LoggerService]);
 ```
 
 ### Tapping onto your classes
@@ -92,11 +92,11 @@ await myDatabase.connect();
 
 ## 📖 Glossary
 
-### `Circuit`
+### Circuit
 
 A circuit is a container which is responsible for managing the instances by holding and initializing them. Each circuit can maximum have one instance of a class in its store. So if you want to have multiple instances of the same class, simply create a new circuit for it. You can create as many circuits as you want by simply calling `new Circuit()`.
 
-### `tap` / `tapAsync`
+### tap / tapAsync
 
 Tapping a class simply means to resolve the class instance and return it. If the class is not yet initialized, it will be initialized and returned.
 
