@@ -6,7 +6,7 @@ export const preloadsSymbol = Symbol.for("wirebox.definition.preloads");
 export type PreconstructFn = (
   dependencies: readonly unknown[],
   context: Context,
-) => unknown | Promise<unknown | (() => unknown)>;
+) => unknown | Promise<() => unknown>;
 
 export class WireDefinition {
   static readonly symbol = Symbol.for("wirebox.definition");

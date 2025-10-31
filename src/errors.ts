@@ -11,6 +11,15 @@ export class UnwiredError extends WireboxError {
   }
 }
 
+export class AlreadyInitializedError extends WireboxError {
+  target: Class;
+
+  constructor(target: Class) {
+    super(`Class(${target.name}) is already initialized.`);
+    this.target = target;
+  }
+}
+
 export class AsyncDependencyError extends WireboxError {
   target: Class;
 
@@ -29,6 +38,15 @@ export class NoCircuitLinkError extends WireboxError {
     super(
       `Class(${target.name}) cannot be instantiated because the Circuit cannot be determined. Make sure you are calling "link" inside a sync constructor of a wired class.`,
     );
+    this.target = target;
+  }
+}
+
+export class InvalidProvidableError extends WireboxError {
+  target: Class;
+
+  constructor(target: Class) {
+    super(`Class(${target.name}) is not a valid Providable.`);
     this.target = target;
   }
 }

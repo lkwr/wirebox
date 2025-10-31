@@ -107,7 +107,7 @@ export const preconstructAsync =
     preconstruct: (
       dependencies: ResolvedInstances<TDeps>,
       context: Context,
-    ) => Promise<InstanceType<T> | (() => InstanceType<T>)>,
+    ) => Promise<() => InstanceType<T>>,
     dependencies?: () => TDeps,
   ) =>
   (target: T, _context: ClassDecoratorContext<T>) => {
@@ -126,7 +126,7 @@ export const setPreconstructAsync = <
   preconstruct: (
     dependencies: ResolvedInstances<TDeps>,
     context: Context,
-  ) => Promise<InstanceType<T> | (() => InstanceType<T>)>,
+  ) => Promise<() => InstanceType<T>>,
   dependencies?: () => TDeps,
 ) => {
   const definition = WireDefinition.from(target, true);

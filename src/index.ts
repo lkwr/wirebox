@@ -42,3 +42,5 @@ export type {
   ResolvedInstance,
   ResolvedInstances,
 } from "./types.ts";
+export { combine, type ResolvedCombine } from "./utilities/combine.ts";
+export { lazy } from "./utilities/lazy.ts";

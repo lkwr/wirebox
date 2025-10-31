@@ -1,5 +1,10 @@
 import { WireDefinition } from "./definition/definition.ts";
-import { AsyncDependencyError, UnwiredError } from "./errors.ts";
+import {
+  AlreadyInitializedError,
+  AsyncDependencyError,
+  InvalidProvidableError,
+  UnwiredError,
+} from "./errors.ts";
 import {
   type Providable,
   type ProviderInfo,
@@ -162,8 +167,7 @@ export class Circuit {
     instance: InstanceType<TTarget>,
   ): InstanceType<TTarget> {
     // if the class is already initialized, throw an error
-    if (this.#instances.has(target))
-      throw new Error(`Class(${target.name}) is already initialized.`);
+    if (this.#instances.has(target)) throw new AlreadyInitializedError(target);
 
     // save the instance
     this.#instances.set(target, instance);
@@ -274,7 +278,7 @@ export class Circuit {
     const wrapped = initializer
       .then((result) => {
         if (this.#instances.has(target))
-          throw new Error(`Class(${target.name}) is already initialized.`);
+          throw new AlreadyInitializedError(target);
 
         const instance =
           typeof result === "function"
@@ -335,9 +339,7 @@ export class Circuit {
     if (!providerInfo) return instance;
 
     if (providerInfo.async)
-      throw new Error(
-        `Class("${context.target.name}") is a async provider and cannot be used in sync tap.`,
-      );
+      throw new AsyncDependencyError(context.target, false);
 
     return providerInfo.getValue(context);
   }
@@ -361,18 +363,14 @@ export class Circuit {
     context: Context<Class>,
   ): ProviderInfo<unknown> | null {
     if (typeof instance !== "object" || instance === null)
-      throw new Error(
-        `Class("${context.target.name}") provided invalid instance.`,
-      );
+      throw new InvalidProvidableError(context.target);
 
     // if instance is not a provider, return null
     if (!(provide in instance)) return null;
 
     // if provider info is not a function, throw error
     if (typeof instance[provide] !== "object")
-      throw new Error(
-        `Class("${context.target.name}") has invalid provide info.`,
-      );
+      throw new InvalidProvidableError(context.target);
 
     return (instance as Providable)[provide];
   }
