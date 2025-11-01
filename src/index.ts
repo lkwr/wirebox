@@ -18,6 +18,14 @@ export {
 } from "./definition/decorators.ts";
 export { WireDefinition } from "./definition/definition.ts";
 export {
+  AlreadyInitializedError,
+  AsyncDependencyError,
+  InvalidProvidableError,
+  NoCircuitLinkError,
+  UnwiredError,
+  WireboxError,
+} from "./errors.ts";
+export {
   BasicValueProvider,
   createAsyncDynamicProvider,
   createAsyncProvider,
@@ -37,8 +45,6 @@ export {
 export type {
   Class,
   Context,
-  InitializerFn,
-  InputsFn,
   ResolvedInstance,
   ResolvedInstances,
 } from "./types.ts";

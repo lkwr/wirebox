@@ -6,7 +6,7 @@ import type {
   ResolvedInstance,
   ResolvedInstances,
 } from "../types";
-import { type PreconstructFn, WireDefinition } from "./definition";
+import { WireDefinition } from "./definition";
 
 export const unwire = (target: Class): void => {
   WireDefinition.unbind(target);
@@ -78,7 +78,7 @@ export const preconstruct =
     const definition = WireDefinition.from(target, true);
 
     definition.async = false;
-    definition.preconstruct = preconstruct as PreconstructFn;
+    definition.preconstruct = preconstruct as WireDefinition["preconstruct"];
     definition.dependencies = dependencies;
   };
 
@@ -96,7 +96,7 @@ export const setPreconstruct = <
   const definition = WireDefinition.from(target, true);
 
   definition.async = false;
-  definition.preconstruct = preconstruct as PreconstructFn;
+  definition.preconstruct = preconstruct as WireDefinition["preconstruct"];
   definition.dependencies = dependencies;
 };
 
@@ -114,7 +114,7 @@ export const preconstructAsync =
     const definition = WireDefinition.from(target, true);
 
     definition.async = true;
-    definition.preconstruct = preconstruct as PreconstructFn;
+    definition.preconstruct = preconstruct as WireDefinition["preconstruct"];
     definition.dependencies = dependencies;
   };
 
@@ -132,7 +132,7 @@ export const setPreconstructAsync = <
   const definition = WireDefinition.from(target, true);
 
   definition.async = true;
-  definition.preconstruct = preconstruct as PreconstructFn;
+  definition.preconstruct = preconstruct as WireDefinition["preconstruct"];
   definition.dependencies = dependencies;
 };
 

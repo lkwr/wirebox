@@ -120,7 +120,7 @@ export const createAsyncDynamicProvider = <const T>(
  * If the value provider is async depends on the given class.
  *
  * @param circuit The circuit to instantiate the class from.
- * @param target The class you want with an other circuit.
+ * @param getTarget The class getter of the target class which should be accessed from the circuit.
  * @returns An (async) value provider which provides the class instance from the given circuit.
  */
 export const withCircuit = <const TTarget extends Class>(

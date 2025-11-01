@@ -1,13 +1,6 @@
 import type { Circuit } from "../circuit.ts";
 import type { Class, Context } from "../types.ts";
 
-export const preloadsSymbol = Symbol.for("wirebox.definition.preloads");
-
-export type PreconstructFn = (
-  dependencies: readonly unknown[],
-  context: Context,
-) => unknown | Promise<() => unknown>;
-
 export class WireDefinition {
   static readonly symbol = Symbol.for("wirebox.definition");
 
@@ -16,7 +9,10 @@ export class WireDefinition {
   singleton?: Circuit;
   dependencies?: () => readonly Class[];
   preloads?: () => readonly Class[];
-  preconstruct?: PreconstructFn;
+  preconstruct?: (
+    dependencies: readonly unknown[],
+    context: Context,
+  ) => unknown | Promise<() => unknown>;
 
   bind(target: Class): WireDefinition {
     Reflect.defineProperty(target, WireDefinition.symbol, {
