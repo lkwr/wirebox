@@ -6,6 +6,7 @@ import type { ProvidedValue } from "./provider/provider.ts";
  *
  * @param TArgs The arguments of the class.
  * @param TInstance The instance type of the class.
+ * @category Utility Type
  */
 export type Class<
   TArgs extends readonly any[] = readonly any[],
@@ -18,6 +19,7 @@ export type Class<
  * Used to await a function which returns an inner promise without resolving it.
  *
  * @param T The wrapped value type.
+ * @category Utility Type
  */
 export type Wrapped<T> = { value: T };
 
@@ -27,6 +29,7 @@ export type Wrapped<T> = { value: T };
  * It is similar to the {@link InstanceType} utility type, but resolve {@link Providable} classes.
  *
  * @param TClass The class to resolve.
+ * @category Utility Type
  */
 export type ResolvedInstance<TClass extends Class> =
   ProvidedValue<TClass> extends never
@@ -37,6 +40,8 @@ export type ResolvedInstance<TClass extends Class> =
  * The resolved instances of multiple classes in an array.
  *
  * It is similar to the {@link ResolvedInstance} type, but for multiple classes.
+ *
+ * @category Utility Type
  */
 export type ResolvedInstances<TClasses extends readonly Class[]> =
   TClasses extends never[]
@@ -49,6 +54,7 @@ export type ResolvedInstances<TClasses extends readonly Class[]> =
  * The context which is provided inside preconstructors and providers.
  *
  * @param TOrigin The origin class of the context.
+ * @category Utility Type
  */
 export type Context<TOrigin extends Class = Class> = {
   /**

@@ -2,11 +2,15 @@ import type { Class } from "./types";
 
 /**
  * The base class for all Wirebox errors.
+ *
+ * @category Error
  */
 export class WireboxError extends Error {}
 
 /**
  * Thrown when a class is not set up for wiring.
+ *
+ * @category Error
  */
 export class UnwiredError extends WireboxError {
   readonly target: Class;
@@ -22,6 +26,8 @@ export class UnwiredError extends WireboxError {
 
 /**
  * Thrown when a class is already initialized.
+ *
+ * @category Error
  */
 export class AlreadyInitializedError extends WireboxError {
   readonly target: Class;
@@ -37,6 +43,8 @@ export class AlreadyInitializedError extends WireboxError {
 
 /**
  * Thrown when an async dependency is used in a sync context.
+ *
+ * @category Error
  */
 export class AsyncDependencyError extends WireboxError {
   readonly target: Class;
@@ -55,6 +63,8 @@ export class AsyncDependencyError extends WireboxError {
 
 /**
  * Thrown when the {@link link} function is called outside of a wired contructor.
+ *
+ * @category Error
  */
 export class NoCircuitLinkError extends WireboxError {
   readonly target: Class;
@@ -72,6 +82,8 @@ export class NoCircuitLinkError extends WireboxError {
 
 /**
  * Thrown when a class with an {@link provide} implementation is not a valid {@link Providable}.
+ *
+ * @category Error
  */
 export class InvalidProvidableError extends WireboxError {
   readonly target: Class;

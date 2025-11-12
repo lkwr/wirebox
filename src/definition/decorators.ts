@@ -1,23 +1,26 @@
-import { Circuit, getCurrentCircuit } from "../circuit";
-import { NoCircuitLinkError } from "../errors";
-import type {
-  Class,
-  Context,
-  ResolvedInstance,
-  ResolvedInstances,
-} from "../types";
+import { Circuit } from "../circuit";
+import type { Class, Context, ResolvedInstances } from "../types";
 import { WireDefinition } from "./definition";
 
+/**
+ * @category Definition
+ */
 export const unwire = (target: Class): void => {
   WireDefinition.unbind(target);
 };
 
+/**
+ * @category Definition
+ */
 export const isWired = (target: Class): boolean => {
   return WireDefinition.from(target) !== undefined;
 };
 
 // singleton
 
+/**
+ * @category Definition Decorator
+ */
 export const singleton =
   (circuit?: Circuit) =>
   <T extends Class>(target: T, _context: ClassDecoratorContext<T>) => {
@@ -25,12 +28,18 @@ export const singleton =
       circuit || Circuit.getDefault();
   };
 
+/**
+ * @category Definition Setter
+ */
 export const setSingleton = <T extends Class>(target: T, circuit?: Circuit) => {
   WireDefinition.from(target, true).singleton = circuit || Circuit.getDefault();
 };
 
 // requires
 
+/**
+ * @category Definition Decorator
+ */
 export const requires =
   <
     TTarget extends Class<ResolvedInstances<TDeps>>,
@@ -42,6 +51,9 @@ export const requires =
     WireDefinition.from(target, true).dependencies = deps;
   };
 
+/**
+ * @category Definition Setter
+ */
 export const setRequires = <
   TTarget extends Class<ResolvedInstances<TDeps>>,
   const TDeps extends readonly Class[],
@@ -54,18 +66,27 @@ export const setRequires = <
 
 // standalone
 
+/**
+ * @category Definition Decorator
+ */
 export const standalone =
   <T extends Class<readonly []>>() =>
   (target: T, _context: ClassDecoratorContext<T>) => {
     WireDefinition.from(target, true).dependencies = () => [];
   };
 
+/**
+ * @category Definition Setter
+ */
 export const setStandalone = <T extends Class<readonly []>>(target: T) => {
   WireDefinition.from(target, true).dependencies = () => [];
 };
 
 // preconstruct
 
+/**
+ * @category Definition Decorator
+ */
 export const preconstruct =
   <T extends Class, const TDeps extends readonly Class[] = readonly []>(
     preconstruct: (
@@ -82,6 +103,9 @@ export const preconstruct =
     definition.dependencies = dependencies;
   };
 
+/**
+ * @category Definition Setter
+ */
 export const setPreconstruct = <
   T extends Class,
   const TDeps extends readonly Class[] = readonly [],
@@ -102,6 +126,9 @@ export const setPreconstruct = <
 
 // preconstruct async
 
+/**
+ * @category Definition Decorator
+ */
 export const preconstructAsync =
   <T extends Class, const TDeps extends readonly Class[] = readonly []>(
     preconstruct: (
@@ -118,6 +145,9 @@ export const preconstructAsync =
     definition.dependencies = dependencies;
   };
 
+/**
+ * @category Definition Setter
+ */
 export const setPreconstructAsync = <
   T extends Class<TDeps>,
   const TDeps extends readonly Class[] = readonly [],
@@ -136,22 +166,20 @@ export const setPreconstructAsync = <
   definition.dependencies = dependencies;
 };
 
-// link
-
-export const link = <T extends Class>(target: T): ResolvedInstance<T> => {
-  const circuit = getCurrentCircuit();
-  if (!circuit) throw new NoCircuitLinkError(target);
-  return circuit.tap(target);
-};
-
 // preloads
 
+/**
+ * @category Definition Decorator
+ */
 export const preloads =
   <T extends Class>(preloads: () => readonly Class[]) =>
   (target: T, _context: ClassDecoratorContext<T>) => {
     WireDefinition.from(target, true).preloads = preloads;
   };
 
+/**
+ * @category Definition Setter
+ */
 export const setPreloads = <T extends Class>(
   target: T,
   preloads: () => readonly Class[],

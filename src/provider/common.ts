@@ -1,13 +1,10 @@
-import type { Circuit } from "../circuit.ts";
 import { setPreconstruct, setStandalone } from "../definition/decorators.ts";
-import type { Class, Context, ResolvedInstance } from "../types.ts";
-import {
-  type Providable,
-  type ProvidableClass,
-  type ProviderInfo,
-  provide,
-} from "./provider.ts";
+import type { Context } from "../types.ts";
+import { type Providable, type ProvidableClass, provide } from "./provider.ts";
 
+/**
+ * @category Common Provider
+ */
 export class BasicValueProvider<T> implements Providable<T> {
   constructor(public value: T) {}
   [provide] = {
@@ -15,6 +12,9 @@ export class BasicValueProvider<T> implements Providable<T> {
   };
 }
 
+/**
+ * @category Common Provider
+ */
 export const createProvider = <const T>(
   getValue: (ctx: Context) => T,
 ): ProvidableClass<T, [ctx: Context]> => {
@@ -35,6 +35,9 @@ export const createProvider = <const T>(
   return Provider;
 };
 
+/**
+ * @category Common Provider
+ */
 export const createAsyncProvider = <const T>(
   getValue: (ctx: Context) => Promise<T>,
 ): ProvidableClass<T, [ctx: Context]> => {
@@ -56,6 +59,9 @@ export const createAsyncProvider = <const T>(
   return AsyncProvider;
 };
 
+/**
+ * @category Common Provider
+ */
 export const createStaticProvider = <const T>(
   value: T,
 ): ProvidableClass<T, []> => {
@@ -70,6 +76,9 @@ export const createStaticProvider = <const T>(
   return Provider;
 };
 
+/**
+ * @category Common Provider
+ */
 export const createAsyncStaticProvider = <const T>(
   value: Promise<T>,
 ): ProvidableClass<T, []> => {
@@ -85,6 +94,9 @@ export const createAsyncStaticProvider = <const T>(
   return AsyncProvider;
 };
 
+/**
+ * @category Common Provider
+ */
 export const createDynamicProvider = <const T>(
   getValue: (ctx: Context) => T,
 ): ProvidableClass<T> => {
@@ -99,6 +111,9 @@ export const createDynamicProvider = <const T>(
   return Provider;
 };
 
+/**
+ * @category Common Provider
+ */
 export const createAsyncDynamicProvider = <const T>(
   getValue: (ctx: Context) => Promise<T>,
 ): ProvidableClass<T> => {
@@ -112,37 +127,4 @@ export const createAsyncDynamicProvider = <const T>(
   setStandalone(AsyncProvider);
 
   return AsyncProvider;
-};
-
-/**
- * Convert a class to an (async) value provider which provides the class instance from the given circuit.
- *
- * If the value provider is async depends on the given class.
- *
- * @param circuit The circuit to instantiate the class from.
- * @param getTarget The class getter of the target class which should be accessed from the circuit.
- * @returns An (async) value provider which provides the class instance from the given circuit.
- */
-export const withCircuit = <const TTarget extends Class>(
-  circuit: Circuit,
-  getTarget: () => TTarget,
-): ProvidableClass<ResolvedInstance<TTarget>> => {
-  class WithCircuit implements Providable<ResolvedInstance<TTarget>> {
-    [provide]: ProviderInfo<ResolvedInstance<TTarget>>;
-
-    constructor() {
-      const target = getTarget();
-      const async = circuit.isAsync(target);
-
-      this[provide] = {
-        async,
-        getValue: () =>
-          async ? circuit.tapAsync(target) : circuit.tap(target),
-      } as ProviderInfo<ResolvedInstance<TTarget>>;
-    }
-  }
-
-  setStandalone(WithCircuit);
-
-  return WithCircuit;
 };

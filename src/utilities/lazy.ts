@@ -7,6 +7,7 @@ import type { Class, ResolvedInstance } from "../types";
  *
  * @param loadModule The function which loads the module (most likely via dynamic import)
  * @param exportName The optional name of the export to load (defaults to default export ["default"])
+ * @category Utility: Lazy
  */
 export const lazy = <
   TMod extends Record<TExport, Class>,

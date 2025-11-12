@@ -10,6 +10,8 @@ import type { Class, ResolvedInstance } from "../types.ts";
 
 /**
  * Converts a record of classes to a record of resolved instances.
+ *
+ * @category Utility: Combine
  */
 export type ResolvedCombine<TTargets extends Record<string, Class>> = {
   [Key in keyof TTargets]: ResolvedInstance<TTargets[Key]>;
@@ -21,6 +23,7 @@ export type ResolvedCombine<TTargets extends Record<string, Class>> = {
  *
  * @param getTargets A functions which returns the record of classes to resolve.
  * @returns A value provider which returns with a record of resolved instances.
+ * @category Utility: Combine
  */
 export const combine = <const TTargets extends Record<string, Class>>(
   getTargets: () => TTargets,

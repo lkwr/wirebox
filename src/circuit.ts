@@ -3,6 +3,7 @@ import {
   AlreadyInitializedError,
   AsyncDependencyError,
   InvalidProvidableError,
+  NoCircuitLinkError,
   UnwiredError,
 } from "./errors.ts";
 import {
@@ -14,12 +15,12 @@ import type { Class, Context, ResolvedInstance, Wrapped } from "./types.ts";
 
 let currentCircuit: Circuit | null = null;
 
-export const getCurrentCircuit = (): Circuit | null => currentCircuit;
-
 /**
  * A circuit is a container which is responsible for managing the instances by holding and initializing them.
  *
  * Only one instance of a class can exist in a circuit.
+ *
+ * @category Core
  */
 export class Circuit {
   /**
@@ -380,6 +381,9 @@ export class Circuit {
   }
 }
 
+/**
+ * @category Core
+ */
 export const tap = <TTarget extends Class>(
   target: TTarget,
   circuit: Circuit = Circuit.getDefault(),
@@ -387,9 +391,21 @@ export const tap = <TTarget extends Class>(
   return circuit.tap(target);
 };
 
+/**
+ * @category Core
+ */
 export const tapAsync = <TTarget extends Class>(
   target: TTarget,
   circuit: Circuit = Circuit.getDefault(),
 ): Promise<ResolvedInstance<TTarget>> => {
   return circuit.tapAsync(target);
+};
+
+/**
+ * @category Core
+ */
+export const link = <T extends Class>(target: T): ResolvedInstance<T> => {
+  const circuit = currentCircuit;
+  if (!circuit) throw new NoCircuitLinkError(target);
+  return circuit.tap(target);
 };

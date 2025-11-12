@@ -1,7 +1,6 @@
-export { Circuit, tap, tapAsync } from "./circuit.ts";
+export { Circuit, link, tap, tapAsync } from "./circuit.ts";
 export {
   isWired,
-  link,
   preconstruct,
   preconstructAsync,
   preloads,
@@ -33,7 +32,6 @@ export {
   createDynamicProvider,
   createProvider,
   createStaticProvider,
-  withCircuit,
 } from "./provider/common.ts";
 export {
   type Providable,
@@ -50,3 +48,4 @@ export type {
 } from "./types.ts";
 export { combine, type ResolvedCombine } from "./utilities/combine.ts";
 export { lazy } from "./utilities/lazy.ts";
+export { withCircuit } from "./utilities/with-circuit.ts";

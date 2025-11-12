@@ -1,6 +1,9 @@
 import type { Circuit } from "../circuit.ts";
 import type { Class, Context } from "../types.ts";
 
+/**
+ * @category Definition
+ */
 export class WireDefinition {
   static readonly symbol = Symbol.for("wirebox.definition");
 

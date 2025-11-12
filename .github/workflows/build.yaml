@@ -25,3 +25,6 @@ jobs:
 
       - name: Build
         run: bun run build
+
+      - name: Build docs
+        run: bun run build:docs
