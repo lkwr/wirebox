@@ -175,7 +175,7 @@ setRequires(MyClass, () => [MyDpenendency]);
 setPreconstruct(MyClass, ([dep1]) => new MyClass(dep1), () => [MyDependency]);
 
 // @preconstructAsync equivalent
-setPreconstructAsync(MyClass, async ([dep1]) => new MyClass(dep1), () => [MyDependency]);
+setPreconstructAsync(MyClass, async ([dep1]) => () => new MyClass(dep1), () => [MyDependency]);
 ```
 
 Every decorator alternative function takes exactly the same arguments as the decorators, expect for the additional first target (class) argument. The naming is the same as the decorators but with the `@` replaced by `set` (and camelCased).
