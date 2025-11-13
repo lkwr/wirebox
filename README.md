@@ -326,7 +326,7 @@ Contributions are welcome! Please follow these steps:
 2. Create a new branch for your feature or bugfix.
 3. Submit a pull request.
 
-We use prettier to format the code, so please make sure to run `bun run format` before committing.
+We use [Biome](https://biomejs.dev) to format and lint the code, so please make sure to run `bun run check` before committing.
 
 ## 📄 License
 
