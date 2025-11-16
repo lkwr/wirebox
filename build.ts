@@ -6,6 +6,7 @@ await build({
   entry: [`${import.meta.dirname}/src/index.ts`],
   outDir: `${import.meta.dirname}/dist`,
   format: "esm",
+  platform: "neutral",
   dts: true,
   clean: true,
   minify: {
