@@ -1,12 +1,12 @@
-import type { Circuit } from "../circuit";
-import { setStandalone } from "../definition/decorators";
+import type { Circuit } from "../circuit.ts";
+import { setStandalone } from "../definition/decorators.ts";
 import {
   type Providable,
   type ProvidableClass,
   type ProviderInfo,
   provide,
-} from "../provider/provider";
-import type { Class, ResolvedInstance } from "../types";
+} from "../provider/provider.ts";
+import type { Class, ResolvedInstance } from "../types.ts";
 
 /**
  * Bind a {@link Circuit} to a given class.

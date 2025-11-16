@@ -2,12 +2,12 @@
   "compilerOptions": {
     // Enable latest features
     "lib": ["ESNext", "DOM"],
-    "target": "ESNext",
-    "module": "ESNext",
+    "target": "esnext",
+    "module": "nodenext",
     "moduleDetection": "force",
 
     // Bundler mode
-    "moduleResolution": "bundler",
+    "moduleResolution": "nodenext",
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "noEmit": true,

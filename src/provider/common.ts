@@ -6,7 +6,12 @@ import { type Providable, type ProvidableClass, provide } from "./provider.ts";
  * @category Common Provider
  */
 export class BasicValueProvider<T> implements Providable<T> {
-  constructor(public value: T) {}
+  readonly value: T;
+
+  constructor(value: T) {
+    this.value = value;
+  }
+
   [provide] = {
     getValue: () => this.value,
   };

@@ -1,6 +1,6 @@
-import { createAsyncProvider } from "../provider/common";
-import type { ProvidableClass } from "../provider/provider";
-import type { Class, ResolvedInstance } from "../types";
+import { createAsyncProvider } from "../provider/common.ts";
+import type { ProvidableClass } from "../provider/provider.ts";
+import type { Class, ResolvedInstance } from "../types.ts";
 
 /**
  * Creates a lazy loaded class provider for a named export.

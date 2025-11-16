@@ -1,6 +1,6 @@
-import { Circuit } from "../circuit";
-import type { Class, Context, ResolvedInstances } from "../types";
-import { WireDefinition } from "./definition";
+import { Circuit } from "../circuit.ts";
+import type { Class, Context, ResolvedInstances } from "../types.ts";
+import { WireDefinition } from "./definition.ts";
 
 /**
  * @category Definition

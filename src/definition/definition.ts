@@ -18,12 +18,8 @@ export class WireDefinition {
   ) => unknown | Promise<() => unknown>;
 
   bind(target: Class): WireDefinition {
-    Reflect.defineProperty(target, WireDefinition.symbol, {
-      enumerable: false,
-      configurable: true,
-      value: this,
-    });
-
+    const map = WireDefinition.#getTargetMap(target, true);
+    map.set(target, this);
     return this;
   }
 
@@ -37,10 +33,11 @@ export class WireDefinition {
     target: Class,
     createIfNotExists = false,
   ): WireDefinition | undefined {
-    let definition = Reflect.get(target, WireDefinition.symbol);
-    if (!createIfNotExists) return definition;
+    const map = WireDefinition.#getTargetMap(target, false);
 
-    if (!definition) {
+    let definition = map?.get(target);
+
+    if (!definition && createIfNotExists) {
       definition = new WireDefinition();
       definition.bind(target);
     }
@@ -49,10 +46,18 @@ export class WireDefinition {
   }
 
   static unbind(target: Class): WireDefinition | undefined {
-    const definition = Reflect.get(target, WireDefinition.symbol);
+    const map = WireDefinition.#getTargetMap(target, false);
+    if (!map) return undefined;
+
+    const definition = map?.get(target);
     if (!definition) return undefined;
 
-    Reflect.deleteProperty(target, WireDefinition.symbol);
+    // remove from map
+    map.delete(target);
+
+    // cleanup map if empty
+    if (map.size === 0) WireDefinition.#removeTargetMap(target);
+
     return definition;
   }
 
@@ -67,4 +72,48 @@ export class WireDefinition {
     if (options.async) definition.async = options.async;
     if (options.singleton) definition.singleton = options.singleton;
   }
+
+  static #getTargetMap(
+    target: Class,
+    createIfNotExists?: false,
+  ): Map<Class, WireDefinition> | undefined;
+  static #getTargetMap(
+    target: Class,
+    createIfNotExists: true,
+  ): Map<Class, WireDefinition>;
+
+  static #getTargetMap(
+    target: Class,
+    createIfNotExists = false,
+  ): Map<Class, WireDefinition> | undefined {
+    const root = getRootPrototype(target);
+
+    let map: Map<Class, WireDefinition> | undefined = Reflect.get(
+      root,
+      WireDefinition.symbol,
+    );
+
+    if (!map && createIfNotExists) {
+      map = new Map();
+      Reflect.defineProperty(root, WireDefinition.symbol, {
+        enumerable: false,
+        configurable: true,
+        writable: false,
+        value: map,
+      });
+    }
+
+    return map;
+  }
+
+  static #removeTargetMap(target: Class): void {
+    const root = getRootPrototype(target);
+    Reflect.deleteProperty(root, WireDefinition.symbol);
+  }
 }
+
+const getRootPrototype = (current: object): object => {
+  const prototype = Reflect.getPrototypeOf(current);
+  if (prototype === Function.prototype || prototype === null) return current;
+  return getRootPrototype(prototype);
+};

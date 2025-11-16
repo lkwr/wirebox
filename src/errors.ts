@@ -1,4 +1,4 @@
-import type { Class } from "./types";
+import type { Class } from "./types.ts";
 
 /**
  * The base class for all Wirebox errors.
