@@ -5,8 +5,8 @@ import { WireDefinition } from "./definition.ts";
 /**
  * @category Definition
  */
-export const unwire = (target: Class): void => {
-  WireDefinition.unbind(target);
+export const unwire = (target: Class): boolean => {
+  return WireDefinition.from(target)?.remove() ?? false;
 };
 
 /**

@@ -4,18 +4,21 @@ import { WireDefinition } from "wirebox";
 class ToBeDecorated {}
 
 beforeAll(() => {
-  WireDefinition.unbind(ToBeDecorated);
+  WireDefinition.from(ToBeDecorated)?.remove();
 });
 
 describe("Wire Definition", () => {
   test("binding", () => {
-    const definition = new WireDefinition();
-
     expect(WireDefinition.from(ToBeDecorated)).toBeUndefined();
 
-    definition.bind(ToBeDecorated);
+    let definition = WireDefinition.from(ToBeDecorated);
 
-    expect(WireDefinition.from(ToBeDecorated)).toBeInstanceOf(WireDefinition);
+    expect(definition).toBeUndefined();
+
+    definition = WireDefinition.from(ToBeDecorated, true);
+
     expect(WireDefinition.from(ToBeDecorated)).toBe(definition);
+    expect(definition).toBeInstanceOf(WireDefinition);
+    expect(definition.target).toBe(ToBeDecorated);
   });
 });
