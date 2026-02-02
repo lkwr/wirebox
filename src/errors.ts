@@ -62,21 +62,15 @@ export class AsyncDependencyError extends WireboxError {
 }
 
 /**
- * Thrown when the {@link link} function is called outside of a wired contructor.
+ * Thrown when the circuit context is not available.
  *
  * @category Error
  */
-export class NoCircuitLinkError extends WireboxError {
-  readonly target: Class;
-
-  /**
-   * @param target The target class.
-   */
-  constructor(target: Class) {
+export class NoCircuitContextError extends WireboxError {
+  constructor() {
     super(
-      `Class(${target.name}) cannot be instantiated because the Circuit cannot be determined. Make sure you are calling "link" inside a sync constructor of a wired class.`,
+      `Circuit context is not available. Make sure you are calling "getCircuit"/"getContext" inside a wired class constructor`,
     );
-    this.target = target;
   }
 }
 

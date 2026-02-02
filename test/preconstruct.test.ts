@@ -1,12 +1,5 @@
-import { beforeAll, describe, expect, mock, test } from "bun:test";
-import {
-  Circuit,
-  type Context,
-  setPreconstruct,
-  setStandalone,
-  tap,
-  WireDefinition,
-} from "wirebox";
+import { describe, expect, mock, test } from "bun:test";
+import { Circuit, setPreconstruct, setStandalone, tap } from "wirebox";
 
 describe("Preconstruct", () => {
   test("basic preconstruct", () => {

@@ -1,4 +1,11 @@
-export { Circuit, link, tap, tapAsync } from "./circuit.ts";
+export {
+  Circuit,
+  getCircuit,
+  getContext,
+  link,
+  tap,
+  tapAsync,
+} from "./circuit.ts";
 export {
   isWired,
   preconstruct,
@@ -9,8 +16,10 @@ export {
   setPreconstructAsync,
   setPreloads,
   setRequires,
+  setSetup,
   setSingleton,
   setStandalone,
+  setup,
   singleton,
   standalone,
   unwire,
@@ -20,7 +29,7 @@ export {
   AlreadyInitializedError,
   AsyncDependencyError,
   InvalidProvidableError,
-  NoCircuitLinkError,
+  NoCircuitContextError,
   UnwiredError,
   WireboxError,
 } from "./errors.ts";

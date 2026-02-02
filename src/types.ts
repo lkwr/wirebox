@@ -14,6 +14,33 @@ export type Class<
 > = abstract new (...args: TArgs) => TInstance;
 
 /**
+ * Extracts properties from a type `T` whose types match `V` exactly.
+ *
+ * @param T The source type.
+ * @param V The value type to extract.
+ * @category Utility Type
+ */
+export type ExtractProperties<T, V> = {
+  [K in keyof T as T[K] extends V ? (V extends T[K] ? K : never) : never]: T[K];
+};
+
+/**
+ * A type representing a setup function for a class.
+ *
+ * This can be:
+ * - A function that returns a void promise and is bound to the instance.
+ * - A function that returns another function which is bound to the instance and returns a void promise.
+ * - A key of a method on the instance that returns a void promise.
+ */
+export type Setupable<T extends Class> =
+  | ((this: InstanceType<T>) => void | Promise<void>)
+  | (() => (this: InstanceType<T>) => void | Promise<void>)
+  | keyof ExtractProperties<
+      InstanceType<T>,
+      (() => Promise<void>) | (() => void)
+    >;
+
+/**
  * A wrapped value which holds the actual value in the `value` property.
  *
  * Used to await a function which returns an inner promise without resolving it.

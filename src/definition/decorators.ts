@@ -1,5 +1,5 @@
 import { Circuit } from "../circuit.ts";
-import type { Class, Context, ResolvedInstances } from "../types.ts";
+import type { Class, Context, ResolvedInstances, Setupable } from "../types.ts";
 import { WireDefinition } from "./definition.ts";
 
 /**
@@ -24,8 +24,7 @@ export const isWired = (target: Class): boolean => {
 export const singleton =
   (circuit?: Circuit) =>
   <T extends Class>(target: T, _context: ClassDecoratorContext<T>) => {
-    WireDefinition.from(target, true).singleton =
-      circuit || Circuit.getDefault();
+    setSingleton(target, circuit);
   };
 
 /**
@@ -48,7 +47,7 @@ export const requires =
     deps: () => TDeps,
   ) =>
   (target: TTarget, _context: ClassDecoratorContext<TTarget>) => {
-    WireDefinition.from(target, true).dependencies = deps;
+    setRequires(target, deps);
   };
 
 /**
@@ -72,7 +71,7 @@ export const setRequires = <
 export const standalone =
   <T extends Class<readonly []>>() =>
   (target: T, _context: ClassDecoratorContext<T>) => {
-    WireDefinition.from(target, true).dependencies = () => [];
+    setStandalone(target);
   };
 
 /**
@@ -96,11 +95,7 @@ export const preconstruct =
     dependencies?: () => TDeps,
   ) =>
   (target: T, _context: ClassDecoratorContext<T>) => {
-    const definition = WireDefinition.from(target, true);
-
-    definition.async = false;
-    definition.preconstruct = preconstruct as WireDefinition["preconstruct"];
-    definition.dependencies = dependencies;
+    setPreconstruct(target, preconstruct, dependencies);
   };
 
 /**
@@ -119,7 +114,6 @@ export const setPreconstruct = <
 ) => {
   const definition = WireDefinition.from(target, true);
 
-  definition.async = false;
   definition.preconstruct = preconstruct as WireDefinition["preconstruct"];
   definition.dependencies = dependencies;
 };
@@ -138,11 +132,7 @@ export const preconstructAsync =
     dependencies?: () => TDeps,
   ) =>
   (target: T, _context: ClassDecoratorContext<T>) => {
-    const definition = WireDefinition.from(target, true);
-
-    definition.async = true;
-    definition.preconstruct = preconstruct as WireDefinition["preconstruct"];
-    definition.dependencies = dependencies;
+    setPreconstructAsync(target, preconstruct, dependencies);
   };
 
 /**
@@ -161,9 +151,41 @@ export const setPreconstructAsync = <
 ) => {
   const definition = WireDefinition.from(target, true);
 
-  definition.async = true;
   definition.preconstruct = preconstruct as WireDefinition["preconstruct"];
   definition.dependencies = dependencies;
+};
+
+// setup
+
+/**
+ * @category Definition Decorator
+ */
+export const setup =
+  <T extends Class<readonly []>, TSetup extends Setupable<T>>(setup: TSetup) =>
+  (target: T, _context: ClassDecoratorContext<T>) => {
+    setSetup(target, setup);
+  };
+
+/**
+ * @category Definition Setter
+ */
+export const setSetup = <
+  T extends Class<readonly []>,
+  TSetup extends Setupable<T>,
+>(
+  target: T,
+  setup: TSetup,
+) => {
+  let setupFn: WireDefinition["setup"] | PropertyKey = setup;
+
+  if (
+    typeof setupFn === "string" ||
+    typeof setupFn === "symbol" ||
+    typeof setupFn === "number"
+  )
+    setupFn = target.prototype[setupFn];
+
+  WireDefinition.from(target, true).setup = setupFn as WireDefinition["setup"];
 };
 
 // preloads
@@ -174,7 +196,7 @@ export const setPreconstructAsync = <
 export const preloads =
   <T extends Class>(preloads: () => readonly Class[]) =>
   (target: T, _context: ClassDecoratorContext<T>) => {
-    WireDefinition.from(target, true).preloads = preloads;
+    setPreloads(target, preloads);
   };
 
 /**

@@ -17,15 +17,18 @@ export class WireDefinition {
     this.target = target;
   }
 
-  // biome-ignore lint/complexity/useLiteralKeys: formatter cannot handle this
-  ["async"]: boolean = false;
   singleton?: Circuit;
   dependencies?: () => readonly Class[];
   preloads?: () => readonly Class[];
+  preconstructAsync?: (
+    dependencies: readonly unknown[],
+    context: Context,
+  ) => Promise<() => unknown>;
   preconstruct?: (
     dependencies: readonly unknown[],
     context: Context,
-  ) => unknown | Promise<() => unknown>;
+  ) => unknown;
+  setup?: (() => void | Promise<void>) | (() => () => void | Promise<void>);
 
   remove(): boolean {
     return REGISTRY.delete(this.target);
@@ -55,8 +58,10 @@ export class WireDefinition {
 
     if (options.dependencies) definition.dependencies = options.dependencies;
     if (options.preloads) definition.preloads = options.preloads;
+    if (options.preconstructAsync)
+      definition.preconstructAsync = options.preconstructAsync;
     if (options.preconstruct) definition.preconstruct = options.preconstruct;
-    if (options.async) definition.async = options.async;
+    if (options.setup) definition.setup = options.setup;
     if (options.singleton) definition.singleton = options.singleton;
 
     return definition;

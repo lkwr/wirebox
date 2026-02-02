@@ -1,4 +1,5 @@
-import { setPreconstruct, setStandalone } from "../definition/decorators.ts";
+import { getContext } from "../circuit.ts";
+import { setStandalone } from "../definition/decorators.ts";
 import type { Context } from "../types.ts";
 import { type Providable, type ProvidableClass, provide } from "./provider.ts";
 
@@ -26,16 +27,14 @@ export const createProvider = <const T>(
   class Provider implements Providable<T> {
     private _value: T;
 
-    constructor(ctx: Context) {
-      this._value = getValue(ctx);
+    constructor() {
+      this._value = getValue(getContext());
     }
 
     [provide] = {
       getValue: () => this._value,
     };
   }
-
-  setPreconstruct(Provider, (_, ctx) => new Provider(ctx));
 
   return Provider;
 };
@@ -49,8 +48,8 @@ export const createAsyncProvider = <const T>(
   class AsyncProvider implements Providable<T> {
     private _value: Promise<T>;
 
-    constructor(ctx: Context) {
-      this._value = getValue(ctx);
+    constructor() {
+      this._value = getValue(getContext());
     }
 
     [provide] = {
@@ -58,8 +57,6 @@ export const createAsyncProvider = <const T>(
       getValue: () => this._value,
     };
   }
-
-  setPreconstruct(AsyncProvider, (_, ctx) => new AsyncProvider(ctx));
 
   return AsyncProvider;
 };
