@@ -130,7 +130,7 @@ export class Circuit {
       return definition.singleton.#resolveAsync(target, context);
 
     // resolve the inputs and initialize the class, with either the initializer or the constructor
-    const initializer = this.resolveDependenciesAsync(
+    const initializer = this.#resolveDependenciesAsync(
       definition.dependencies?.() ?? [],
       definition.preloads?.() ?? [],
       context,
@@ -335,7 +335,7 @@ export class Circuit {
     });
   }
 
-  async resolveDependenciesAsync(
+  async #resolveDependenciesAsync(
     dependencies: readonly Class[],
     preloads: readonly Class[],
     context: Context<Class>,

@@ -36,6 +36,8 @@ export const createProvider = <const T>(
     };
   }
 
+  setStandalone(Provider);
+
   return Provider;
 };
 
@@ -57,6 +59,8 @@ export const createAsyncProvider = <const T>(
       getValue: () => this._value,
     };
   }
+
+  setStandalone(AsyncProvider);
 
   return AsyncProvider;
 };
