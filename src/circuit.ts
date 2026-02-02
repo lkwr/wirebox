@@ -3,7 +3,7 @@ import {
   AlreadyInitializedError,
   AsyncDependencyError,
   InvalidProvidableError,
-  NoCircuitLinkError,
+  NoCircuitContextError,
   UnwiredError,
 } from "./errors.ts";
 import {
@@ -13,7 +13,7 @@ import {
 } from "./provider/provider.ts";
 import type { Class, Context, ResolvedInstance, Wrapped } from "./types.ts";
 
-let currentCircuit: Circuit | null = null;
+let currentContext: Context | null = null;
 
 /**
  * A circuit is a container which is responsible for managing the instances by holding and initializing them.
@@ -77,8 +77,12 @@ export class Circuit {
     if (this.#asyncInitializers.has(target))
       throw new AsyncDependencyError(target, true);
 
-    // if target is async and not initialized, throw an error
-    if (definition.async) throw new AsyncDependencyError(target, false);
+    // if target has an async preconstruct, throw an error
+    if (definition.preconstructAsync)
+      throw new AsyncDependencyError(target, false);
+
+    // if target has setup, throw an error
+    if (definition.setup) throw new AsyncDependencyError(target, false);
 
     // resolve the inputs
     const inputs = this.#resolveDependencies(
@@ -87,25 +91,19 @@ export class Circuit {
     );
 
     // initialize the class either with the preconstruct if available or with the constructor
-    const instance = this.#runWithCircuit(() =>
-      definition.preconstruct
-        ? definition.preconstruct(inputs, context)
-        : Reflect.construct(target, inputs),
+    const instance = this.#runWithContext(
+      () =>
+        definition.preconstruct
+          ? definition.preconstruct(inputs, context)
+          : Reflect.construct(target, inputs),
+      context,
     );
 
-    // check if the class is async
-    if (instance instanceof Promise) {
-      // handle the promise and save it to prevent multiple async initializations
-      this.#handlePromise(target, instance);
+    // save the instance to prevent multiple initializations
+    this.#instances.set(target, instance);
 
-      throw new AsyncDependencyError(target, true);
-    } else {
-      // save the instance to prevent multiple initializations
-      this.#instances.set(target, instance);
-
-      // resolve and return the instance
-      return instance;
-    }
+    // resolve and return the instance
+    return instance;
   }
 
   #resolveAsync(target: Class, context: Context<Class>): Promise<unknown> {
@@ -136,17 +134,42 @@ export class Circuit {
       definition.dependencies?.() ?? [],
       definition.preloads?.() ?? [],
       context,
-    ).then((inputs) =>
-      this.#runWithCircuit(() =>
-        definition.preconstruct
-          ? definition.preconstruct(inputs, context)
-          : Reflect.construct(target, inputs),
-      ),
-    );
+    ).then(async (inputs) => {
+      const instancePromise = this.#runWithContext(
+        () =>
+          // use preconstructAsync if available
+          definition.preconstructAsync
+            ? definition.preconstructAsync(inputs, context)
+            : // then use preconstruct if available
+              definition.preconstruct
+              ? definition.preconstruct(inputs, context)
+              : // otherwise use the constructor
+                Reflect.construct(target, inputs),
+        context,
+      );
+
+      const instance = await instancePromise;
+
+      // if there is no setup, return the instance directly
+      if (!definition.setup) return instance;
+
+      // run the setup
+      let setupPromise = definition.setup.bind(instance)();
+
+      // if the setup result is a function, call it to get the actual promise
+      if (typeof setupPromise === "function") {
+        setupPromise = setupPromise.bind(instance)();
+      }
+
+      // wait for the setup to finish
+      await setupPromise;
+
+      return instance;
+    });
 
     // handle the promise and save it to prevent multiple async initializations
     // and return the promise
-    return this.#handlePromise(target, initializer);
+    return this.#handlePromise(target, initializer, context);
   }
 
   /**
@@ -242,8 +265,11 @@ export class Circuit {
     // if no definition is available, return false
     if (!definition) return false;
 
-    // if target has async initializer, return true
-    if (definition.async) return true;
+    // if target has async preconstruct, return true
+    if (definition.preconstructAsync) return true;
+
+    // if target has setup, return true
+    if (definition.setup) return true;
 
     const ctx = this.#createContext(target);
 
@@ -261,20 +287,21 @@ export class Circuit {
     return providerInfo.async ?? false;
   }
 
-  #runWithCircuit<T>(fn: () => T): T {
-    const previousCircuit = currentCircuit;
+  #runWithContext<T>(fn: () => T, context: Context): T {
+    const previousContext = currentContext;
 
     try {
-      currentCircuit = this;
+      currentContext = context;
       return fn();
     } finally {
-      currentCircuit = previousCircuit;
+      currentContext = previousContext;
     }
   }
 
   #handlePromise(
     target: Class,
     initializer: Promise<unknown>,
+    context: Context,
   ): Promise<unknown> {
     const wrapped = initializer
       .then((result) => {
@@ -283,7 +310,7 @@ export class Circuit {
 
         const instance =
           typeof result === "function"
-            ? this.#runWithCircuit(() => result())
+            ? this.#runWithContext(() => result(), context)
             : result;
 
         this.#instances.set(target, instance);
@@ -404,8 +431,22 @@ export const tapAsync = <TTarget extends Class>(
 /**
  * @category Core
  */
+export const getContext = (): Context => {
+  const context = currentContext;
+  if (!context) throw new NoCircuitContextError();
+  return context;
+};
+
+/**
+ * @category Core
+ */
+export const getCircuit = (): Circuit => {
+  return getContext().circuit;
+};
+
+/**
+ * @category Core
+ */
 export const link = <T extends Class>(target: T): ResolvedInstance<T> => {
-  const circuit = currentCircuit;
-  if (!circuit) throw new NoCircuitLinkError(target);
-  return circuit.tap(target);
+  return getCircuit().tap(target);
 };
