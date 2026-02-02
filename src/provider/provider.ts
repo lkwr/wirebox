@@ -39,11 +39,8 @@ export type ProviderInfo<TValue = unknown> =
  * @param T The class to infer the value type from.
  * @category Provider
  */
-export type ProvidedValue<T extends Class> = T extends ProvidableClass<
-  infer TValue
->
-  ? TValue
-  : never;
+export type ProvidedValue<T extends Class> =
+  T extends ProvidableClass<infer TValue> ? TValue : never;
 
 /**
  * A class which provides a value and conforms to {@link Providable}.
