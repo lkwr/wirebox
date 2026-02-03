@@ -1,5 +1,5 @@
 import { describe, expect, mock, test } from "bun:test";
-import { Circuit, setSetup, tap, tapAsync } from "wirebox";
+import { Circuit, setSetup, setStandalone, tap, tapAsync } from "wirebox";
 
 describe("Setup", () => {
   test("basic setup", async () => {
@@ -11,6 +11,7 @@ describe("Setup", () => {
       expect(this).toBeInstanceOf(MySetupClass);
     });
 
+    setStandalone(MySetupClass);
     setSetup(MySetupClass, setupFn);
 
     const instance1 = await tapAsync(MySetupClass);
@@ -43,6 +44,7 @@ describe("Setup", () => {
       }
     }
 
+    setStandalone(MyAsyncSetupClass);
     setSetup(MyAsyncSetupClass, () => MyAsyncSetupClass.prototype.inlineSetup);
 
     const instance1 = await tapAsync(MyAsyncSetupClass);
@@ -59,6 +61,7 @@ describe("Setup", () => {
       initialized = false;
     }
 
+    setStandalone(MyAsyncSetupClass);
     setSetup(MyAsyncSetupClass, async function () {
       expect(this).toBeInstanceOf(MyAsyncSetupClass);
       await new Promise((resolve) => setTimeout(resolve, 10));
@@ -85,6 +88,7 @@ describe("Setup", () => {
       }
     }
 
+    setStandalone(MyAsyncSetupClass);
     setSetup(MyAsyncSetupClass, "inlineSetup");
 
     const instance1 = await tapAsync(MyAsyncSetupClass);

@@ -30,6 +30,16 @@ export class WireDefinition {
   ) => unknown;
   setup?: (() => void | Promise<void>) | (() => () => void | Promise<void>);
 
+  isValid(): boolean {
+    // cannot have both preconstruct and preconstructAsync
+    if (this.preconstruct && this.preconstructAsync) return false;
+
+    // dependencies must be defined
+    if (!this.dependencies) return false;
+
+    return true;
+  }
+
   remove(): boolean {
     return REGISTRY.delete(this.target);
   }
