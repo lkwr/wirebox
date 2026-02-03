@@ -56,5 +56,11 @@ export type {
   ResolvedInstances,
 } from "./types.ts";
 export { combine, type ResolvedCombine } from "./utilities/combine.ts";
+export {
+  conditional,
+  conditionalAsync,
+  setConditional,
+  setConditionalAsync,
+} from "./utilities/conditional.ts";
 export { lazy } from "./utilities/lazy.ts";
 export { withCircuit } from "./utilities/with-circuit.ts";

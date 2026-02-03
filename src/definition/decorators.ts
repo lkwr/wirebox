@@ -31,7 +31,9 @@ export const singleton =
  * @category Definition Setter
  */
 export const setSingleton = <T extends Class>(target: T, circuit?: Circuit) => {
-  WireDefinition.from(target, true).singleton = circuit || Circuit.getDefault();
+  WireDefinition.set(target, {
+    singleton: circuit || Circuit.getDefault(),
+  });
 };
 
 // requires
@@ -44,10 +46,10 @@ export const requires =
     TTarget extends Class<ResolvedInstances<TDeps>>,
     const TDeps extends readonly Class[],
   >(
-    deps: () => TDeps,
+    dependencies: () => TDeps,
   ) =>
   (target: TTarget, _context: ClassDecoratorContext<TTarget>) => {
-    setRequires(target, deps);
+    setRequires(target, dependencies);
   };
 
 /**
@@ -58,9 +60,11 @@ export const setRequires = <
   const TDeps extends readonly Class[],
 >(
   target: TTarget,
-  deps: () => TDeps,
+  dependencies: () => TDeps,
 ) => {
-  WireDefinition.from(target, true).dependencies = deps;
+  WireDefinition.set(target, {
+    dependencies,
+  });
 };
 
 // standalone
@@ -78,7 +82,9 @@ export const standalone =
  * @category Definition Setter
  */
 export const setStandalone = <T extends Class<readonly []>>(target: T) => {
-  WireDefinition.from(target, true).dependencies = () => [];
+  WireDefinition.set(target, {
+    dependencies: () => [],
+  });
 };
 
 // preconstruct
@@ -112,10 +118,10 @@ export const setPreconstruct = <
   ) => InstanceType<T>,
   dependencies?: () => TDeps,
 ) => {
-  const definition = WireDefinition.from(target, true);
-
-  definition.preconstruct = preconstruct as WireDefinition["preconstruct"];
-  definition.dependencies = dependencies;
+  WireDefinition.set(target, {
+    dependencies: dependencies ?? (() => []),
+    preconstruct: preconstruct as WireDefinition["preconstruct"],
+  });
 };
 
 // preconstruct async
@@ -125,14 +131,14 @@ export const setPreconstruct = <
  */
 export const preconstructAsync =
   <T extends Class, const TDeps extends readonly Class[] = readonly []>(
-    preconstruct: (
+    preconstructAsync: (
       dependencies: ResolvedInstances<TDeps>,
       context: Context,
     ) => Promise<() => InstanceType<T>>,
     dependencies?: () => TDeps,
   ) =>
   (target: T, _context: ClassDecoratorContext<T>) => {
-    setPreconstructAsync(target, preconstruct, dependencies);
+    setPreconstructAsync(target, preconstructAsync, dependencies);
   };
 
 /**
@@ -143,16 +149,16 @@ export const setPreconstructAsync = <
   const TDeps extends readonly Class[] = readonly [],
 >(
   target: T,
-  preconstruct: (
+  preconstructAsync: (
     dependencies: ResolvedInstances<TDeps>,
     context: Context,
   ) => Promise<() => InstanceType<T>>,
   dependencies?: () => TDeps,
 ) => {
-  const definition = WireDefinition.from(target, true);
-
-  definition.preconstruct = preconstruct as WireDefinition["preconstruct"];
-  definition.dependencies = dependencies;
+  WireDefinition.set(target, {
+    dependencies: dependencies ?? (() => []),
+    preconstructAsync: preconstructAsync as WireDefinition["preconstructAsync"],
+  });
 };
 
 // setup
@@ -185,7 +191,7 @@ export const setSetup = <
   )
     setupFn = target.prototype[setupFn];
 
-  WireDefinition.from(target, true).setup = setupFn as WireDefinition["setup"];
+  WireDefinition.set(target, { setup: setupFn as WireDefinition["setup"] });
 };
 
 // preloads
@@ -206,5 +212,5 @@ export const setPreloads = <T extends Class>(
   target: T,
   preloads: () => readonly Class[],
 ) => {
-  WireDefinition.from(target, true).preloads = preloads;
+  WireDefinition.set(target, { preloads });
 };

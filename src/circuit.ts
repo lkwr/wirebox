@@ -66,8 +66,8 @@ export class Circuit {
     // get the class definition
     const definition = WireDefinition.from(target);
 
-    // if the target not resolved yet and no meta is available, throw an error
-    if (!definition) throw new UnwiredError(target);
+    // if the target not resolved yet and no valid definition is available, throw an error
+    if (!definition || !definition.isValid()) throw new UnwiredError(target);
 
     // if the class is a singleton, forward the tap to the singleton circuit
     if (definition.singleton && definition.singleton !== this)
@@ -122,8 +122,8 @@ export class Circuit {
     // get the class definition
     const definition = WireDefinition.from(target);
 
-    // if the target not resolved yet and no definition is available, throw an error
-    if (!definition) throw new UnwiredError(target);
+    // if the target not resolved yet and no valid definition is available, throw an error
+    if (!definition || !definition.isValid()) throw new UnwiredError(target);
 
     // if the class is a singleton, forward the tap to the singleton circuit
     if (definition.singleton && definition.singleton !== this)
