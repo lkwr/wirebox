@@ -1,9 +1,9 @@
-import { beforeAll, describe, expect, test } from "bun:test";
+import { beforeEach, describe, expect, test } from "bun:test";
 import { WireDefinition } from "wirebox";
 
 class ToBeDecorated {}
 
-beforeAll(() => {
+beforeEach(() => {
   WireDefinition.from(ToBeDecorated)?.remove();
 });
 
