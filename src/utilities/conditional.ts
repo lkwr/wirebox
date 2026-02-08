@@ -5,6 +5,10 @@ import {
 import type { ProvidableClass } from "../provider/provider.ts";
 import type { Class, Context, ResolvedInstances } from "../types.ts";
 
+type ConditionalTarget<T extends Class> =
+  | Class<any[], InstanceType<T>>
+  | ProvidableClass<InstanceType<T>>;
+
 /**
  * @category Utility: Conditional
  */
@@ -13,7 +17,7 @@ export const conditional =
     resolve: (
       dependencies: ResolvedInstances<TDeps>,
       context: Context,
-    ) => NoInfer<T | ProvidableClass<InstanceType<T>>>,
+    ) => ConditionalTarget<NoInfer<T>>,
     dependencies?: () => TDeps,
   ) =>
   (target: T, _context: ClassDecoratorContext<T>) => {
@@ -31,7 +35,7 @@ export const setConditional = <
   resolve: (
     dependencies: ResolvedInstances<TDeps>,
     context: Context,
-  ) => NoInfer<T | ProvidableClass<InstanceType<T>>>,
+  ) => ConditionalTarget<NoInfer<T>>,
   dependencies?: () => TDeps,
 ) => {
   setPreconstruct(
@@ -54,7 +58,7 @@ export const conditionalAsync =
     resolveAsync: (
       dependencies: ResolvedInstances<TDeps>,
       context: Context,
-    ) => Promise<NoInfer<T | ProvidableClass<InstanceType<T>>>>,
+    ) => Promise<ConditionalTarget<NoInfer<T>>>,
     dependencies?: () => TDeps,
   ) =>
   (target: T, _context: ClassDecoratorContext<T>) => {
@@ -72,7 +76,7 @@ export const setConditionalAsync = <
   resolveAsync: (
     dependencies: ResolvedInstances<TDeps>,
     context: Context,
-  ) => Promise<NoInfer<T | ProvidableClass<InstanceType<T>>>>,
+  ) => Promise<ConditionalTarget<NoInfer<T>>>,
   dependencies?: () => TDeps,
 ) => {
   setPreconstructAsync(
