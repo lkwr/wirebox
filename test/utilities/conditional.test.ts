@@ -1,10 +1,11 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, test } from "bun:test";
 import {
   Circuit,
   setConditional,
   setConditionalAsync,
   setStandalone,
   unwire,
+  withCircuit,
 } from "wirebox";
 
 abstract class PubSub {
@@ -38,9 +39,9 @@ class RedisPubSub extends PubSub {
 }
 
 afterEach(() => {
-  expect(unwire(PubSub)).toBe(true);
-  expect(unwire(InMemoryPubSub)).toBe(true);
-  expect(unwire(RedisPubSub)).toBe(true);
+  unwire(PubSub);
+  unwire(InMemoryPubSub);
+  unwire(RedisPubSub);
 });
 
 describe("Conditional", () => {
@@ -71,14 +72,28 @@ describe("Conditional", () => {
     expect(instance2).not.toBe(instance1);
   });
 
+  test("conditional sync providable", () => {
+    const circuit1 = new Circuit();
+    const circuit2 = new Circuit();
+
+    setConditional(PubSub, () => withCircuit(circuit2, () => InMemoryPubSub));
+    setStandalone(InMemoryPubSub);
+
+    const instance1 = circuit1.tap(PubSub);
+
+    expect(instance1).toBeInstanceOf(InMemoryPubSub);
+    expect(instance1.type).toBe("in-memory");
+
+    const instance2 = circuit2.get(InMemoryPubSub);
+
+    expect(instance2).toBe(instance1);
+  });
+
   test("conditional async", async () => {
     const circuit = new Circuit();
     let isInMemory = true;
 
-    const getIsInMemory = async () =>
-      new Promise<boolean>((resolve) =>
-        setTimeout(() => resolve(isInMemory), 10),
-      );
+    const getIsInMemory = async () => Bun.sleep(10).then(() => isInMemory);
 
     setConditionalAsync(PubSub, async () =>
       (await getIsInMemory()) ? InMemoryPubSub : RedisPubSub,
@@ -106,5 +121,24 @@ describe("Conditional", () => {
     expect(instance2).toBeInstanceOf(RedisPubSub);
     expect(instance2.type).toBe("redis");
     expect(instance2).not.toBe(instance1);
+  });
+
+  test("conditional async providable", async () => {
+    const circuit1 = new Circuit();
+    const circuit2 = new Circuit();
+
+    setConditionalAsync(PubSub, () =>
+      Bun.sleep(10).then(() => withCircuit(circuit2, () => InMemoryPubSub)),
+    );
+    setStandalone(InMemoryPubSub);
+
+    const instance1 = await circuit1.tapAsync(PubSub);
+
+    expect(instance1).toBeInstanceOf(InMemoryPubSub);
+    expect(instance1.type).toBe("in-memory");
+
+    const instance2 = circuit2.get(InMemoryPubSub);
+
+    expect(instance2).toBe(instance1);
   });
 });

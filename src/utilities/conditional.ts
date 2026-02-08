@@ -2,6 +2,7 @@ import {
   setPreconstruct,
   setPreconstructAsync,
 } from "../definition/decorators.ts";
+import type { ProvidableClass } from "../provider/provider.ts";
 import type { Class, Context, ResolvedInstances } from "../types.ts";
 
 /**
@@ -12,7 +13,7 @@ export const conditional =
     resolve: (
       dependencies: ResolvedInstances<TDeps>,
       context: Context,
-    ) => NoInfer<T>,
+    ) => NoInfer<T | ProvidableClass<InstanceType<T>>>,
     dependencies?: () => TDeps,
   ) =>
   (target: T, _context: ClassDecoratorContext<T>) => {
@@ -30,7 +31,7 @@ export const setConditional = <
   resolve: (
     dependencies: ResolvedInstances<TDeps>,
     context: Context,
-  ) => NoInfer<T>,
+  ) => NoInfer<T | ProvidableClass<InstanceType<T>>>,
   dependencies?: () => TDeps,
 ) => {
   setPreconstruct(
@@ -53,7 +54,7 @@ export const conditionalAsync =
     resolveAsync: (
       dependencies: ResolvedInstances<TDeps>,
       context: Context,
-    ) => Promise<NoInfer<T>>,
+    ) => Promise<NoInfer<T | ProvidableClass<InstanceType<T>>>>,
     dependencies?: () => TDeps,
   ) =>
   (target: T, _context: ClassDecoratorContext<T>) => {
@@ -71,7 +72,7 @@ export const setConditionalAsync = <
   resolveAsync: (
     dependencies: ResolvedInstances<TDeps>,
     context: Context,
-  ) => Promise<NoInfer<T>>,
+  ) => Promise<NoInfer<T | ProvidableClass<InstanceType<T>>>>,
   dependencies?: () => TDeps,
 ) => {
   setPreconstructAsync(
