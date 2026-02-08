@@ -58,7 +58,7 @@ export const conditionalAsync =
     resolveAsync: (
       dependencies: ResolvedInstances<TDeps>,
       context: Context,
-    ) => Promise<ConditionalTarget<NoInfer<T>>>,
+    ) => Promise<ConditionalTarget<NoInfer<T>>> | ConditionalTarget<NoInfer<T>>,
     dependencies?: () => TDeps,
   ) =>
   (target: T, _context: ClassDecoratorContext<T>) => {
@@ -76,7 +76,7 @@ export const setConditionalAsync = <
   resolveAsync: (
     dependencies: ResolvedInstances<TDeps>,
     context: Context,
-  ) => Promise<ConditionalTarget<NoInfer<T>>>,
+  ) => Promise<ConditionalTarget<NoInfer<T>>> | ConditionalTarget<NoInfer<T>>,
   dependencies?: () => TDeps,
 ) => {
   setPreconstructAsync(
