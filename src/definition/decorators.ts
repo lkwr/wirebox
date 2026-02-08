@@ -167,7 +167,7 @@ export const setPreconstructAsync = <
  * @category Definition Decorator
  */
 export const setup =
-  <T extends Class<readonly []>, TSetup extends Setupable<T>>(setup: TSetup) =>
+  <T extends Class, TSetup extends Setupable<T>>(setup: TSetup) =>
   (target: T, _context: ClassDecoratorContext<T>) => {
     setSetup(target, setup);
   };
@@ -175,10 +175,7 @@ export const setup =
 /**
  * @category Definition Setter
  */
-export const setSetup = <
-  T extends Class<readonly []>,
-  TSetup extends Setupable<T>,
->(
+export const setSetup = <T extends Class, TSetup extends Setupable<T>>(
   target: T,
   setup: TSetup,
 ) => {
