@@ -21,7 +21,7 @@ export type ResolvedCombine<TTargets extends Record<string, Class>> = {
  * Combines multiple classes into a single value by resolving a record
  * of classes to a record of resolved instances.
  *
- * @param getTargets A functions which returns the record of classes to resolve.
+ * @param getTargets A function which returns the record of classes to resolve.
  * @returns A value provider which returns with a record of resolved instances.
  * @category Utility: Combine
  */

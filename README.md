@@ -160,7 +160,7 @@ And of course, the `@preconstructAsync` decorator can also be used with dependen
 
 ##### Usage without decorators
 
-If your runtime does not support decorators or you don't want to use them for some reason, there are alternative functions which does exactly the same, but are not as convenient as decorators.
+If your runtime does not support decorators or you don't want to use them for some reason, there are alternative functions which do exactly the same, but are not as convenient as decorators.
 
 ```ts
 class MyClass {}
@@ -180,7 +180,7 @@ setPreconstructAsync(MyClass, async ([dep1]) => () => new MyClass(dep1), () => [
 
 Every decorator alternative function takes exactly the same arguments as the decorators, except for the additional first target (class) argument. The naming is the same as the decorators but with the `@` replaced by `set` (and camelCased).
 
-**Note:** These functions should only called once and directly after the class declaration, otherwise they may not work as expected.
+**Note:** These functions should only be called once and directly after the class declaration, otherwise they may not work as expected.
 
 #### Additional options
 

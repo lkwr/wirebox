@@ -53,7 +53,7 @@ export type Wrapped<T> = { value: T };
 /**
  * The resolved instance of a class when {@link tap} or {@link tapAsync} is called.
  *
- * It is similar to the {@link InstanceType} utility type, but resolve {@link Providable} classes.
+ * It is similar to the {@link InstanceType} utility type, but resolves {@link Providable} classes.
  *
  * @param TClass The class to resolve.
  * @category Utility Type

@@ -174,7 +174,7 @@ export class Circuit {
 
   /**
    * Installing means to manually add an instance to the circuit.
-   * The installed instance class also don't need to be wired
+   * The installed instance class also doesn't need to be wired
    * because you are responsible for initializing it.
    *
    * For example, when a circuit is created, it installs itself as an instance.
@@ -243,7 +243,7 @@ export class Circuit {
    * @returns The instance of the class, or undefined if not found.
    */
   get<TTarget extends Class>(
-    target: Class,
+    target: TTarget,
   ): ResolvedInstance<TTarget> | undefined {
     return this.#instances.get(target);
   }

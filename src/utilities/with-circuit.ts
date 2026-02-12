@@ -11,7 +11,7 @@ import type { Class, ResolvedInstance } from "../types.ts";
 /**
  * Bind a {@link Circuit} to a given class.
  *
- * This is useful when force to use a specific circuit but can't or don't want to use singletons.
+ * This is useful when forced to use a specific circuit but can't or don't want to use singletons.
  *
  * Internally, this creates a custom provider which uses the given circuit to resolve the class.
  *
