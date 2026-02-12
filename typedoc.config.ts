@@ -4,6 +4,7 @@ export default {
   entryPoints: ["src/index.ts"],
   out: "docs",
   plugin: ["typedoc-github-theme"],
+  githubPages: false,
   externalSymbolLinkMappings: {
     typescript: {
       InstanceType:

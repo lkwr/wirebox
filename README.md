@@ -107,7 +107,7 @@ class FileLogger extends Logger {
 }
 ```
 
-Because `ConsoleLogger` and `FileLogger` extends the `Logger` class (`implements Logger` will also work), we can use the `@preconstruct` decorator to create an instance of either class. So we only need to define `Logger` as our dependency and the preconstrcut will take care of which class to instantiate.
+Because `ConsoleLogger` and `FileLogger` extends the `Logger` class (`implements Logger` will also work), we can use the `@preconstruct` decorator to create an instance of either class. So we only need to define `Logger` as our dependency and the preconstruct will take care of which class to instantiate.
 
 Dependencies can be optionally defined as the second argument and will be available in the preconstruct function as first argument.
 
@@ -160,7 +160,7 @@ And of course, the `@preconstructAsync` decorator can also be used with dependen
 
 ##### Usage without decorators
 
-If your runtime does not support decorators or you don't want to use them for some reason, there are alternative functions which does exactly the same, but are so convenient as decorators.
+If your runtime does not support decorators or you don't want to use them for some reason, there are alternative functions which does exactly the same, but are not as convenient as decorators.
 
 ```ts
 class MyClass {}
@@ -169,7 +169,7 @@ class MyClass {}
 setStandalone(MyClass);
 
 // @requires equivalent
-setRequires(MyClass, () => [MyDpenendency]);
+setRequires(MyClass, () => [MyDependency]);
 
 // @preconstruct equivalent
 setPreconstruct(MyClass, ([dep1]) => new MyClass(dep1), () => [MyDependency]);
@@ -178,7 +178,7 @@ setPreconstruct(MyClass, ([dep1]) => new MyClass(dep1), () => [MyDependency]);
 setPreconstructAsync(MyClass, async ([dep1]) => () => new MyClass(dep1), () => [MyDependency]);
 ```
 
-Every decorator alternative function takes exactly the same arguments as the decorators, expect for the additional first target (class) argument. The naming is the same as the decorators but with the `@` replaced by `set` (and camelCased).
+Every decorator alternative function takes exactly the same arguments as the decorators, except for the additional first target (class) argument. The naming is the same as the decorators but with the `@` replaced by `set` (and camelCased).
 
 **Note:** These functions should only called once and directly after the class declaration, otherwise they may not work as expected.
 
@@ -189,7 +189,7 @@ The four decorators above can only be used once per class and you can not mix th
 But there is currently one additional decorator which can be combined with any of the above decorators. It is the `@singleton` decorator.
 
 ```ts
-import { standalone } from "wirebox";
+import { standalone, singleton } from "wirebox";
 
 @standalone()
 @singleton()
@@ -226,7 +226,7 @@ The `tap` function will return the instance of the class, or throw an error if t
 
 #### Async tapping
 
-You may remember that there is a `@preconstructAsync` decorator which allows you to define async preconstructors. Tapping a class with an async part (like `@preconstrcutAsync`) will not work using the syncronous `tap` function. Instead, you need to use the `tapAsync` function which returns a `Promise` which resolves with the instance of the class. Of course, `tapAsync` can also be used on classes without async parts but you have to still `await` them. If you don't know if the requesting class has async parts (including dependencies), you are always safe using `tapAsync`.
+You may remember that there is a `@preconstructAsync` decorator which allows you to define async preconstructors. Tapping a class with an async part (like `@preconstructAsync`) will not work using the synchronous `tap` function. Instead, you need to use the `tapAsync` function which returns a `Promise` which resolves with the instance of the class. Of course, `tapAsync` can also be used on classes without async parts but you have to still `await` them. If you don't know if the requesting class has async parts (including dependencies), you are always safe using `tapAsync`.
 
 #### Circuits
 
@@ -284,16 +284,54 @@ const myValue = tap(HelloProvider); // also works as a @requires, @preconstruct,
 console.log(myValue); // "Hello World!"
 ```
 
-TODO more information
-
+There are also specialized provider creation functions like `createStaticProvider`, `createDynamicProvider`, `createAsyncProvider`, and more. For details, see the [documentation](https://wirebox.pages.dev).
 
 ### Utilities
 
 #### Combine
 
+The `combine` utility merges multiple classes into a single dependency that resolves to a record of their instances.
+
+```ts
+import { combine, tap } from "wirebox";
+
+const Dependencies = combine(() => ({
+  logger: Logger,
+  database: Database,
+}));
+
+const deps = tap(Dependencies);
+console.log(deps.logger instanceof Logger); // true
+console.log(deps.database instanceof Database); // true
+```
+
 #### Lazy
 
+The `lazy` utility creates a lazy-loaded class provider using dynamic imports. This is useful for code splitting.
+
+```ts
+import { lazy, tapAsync } from "wirebox";
+
+const MyService = lazy(() => import("./my-service.ts"));
+
+const service = await tapAsync(MyService);
+```
+
+By default it uses the `default` export, but you can specify a named export as the second argument.
+
 #### With Circuit
+
+The `withCircuit` utility binds a specific circuit to a class, so it always resolves from that circuit regardless of where it is tapped.
+
+```ts
+import { Circuit, withCircuit, tap } from "wirebox";
+
+const myCircuit = new Circuit();
+
+const BoundLogger = withCircuit(myCircuit, () => Logger);
+
+const logger = tap(BoundLogger); // resolves Logger from myCircuit
+```
 
 ## 📖 Glossary
 

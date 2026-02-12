@@ -5,6 +5,10 @@ import {
 import type { ProvidableClass } from "../provider/provider.ts";
 import type { Class, Context, ResolvedInstances } from "../types.ts";
 
+/**
+ * A target that a conditional decorator can resolve to, either a class
+ * extending `T` or a providable class providing an instance of `T`.
+ */
 type ConditionalTarget<T extends Class> =
   | Class<any[], InstanceType<T>>
   | ProvidableClass<InstanceType<T>>;
