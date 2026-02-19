@@ -1,5 +1,5 @@
 import { Circuit } from "../circuit.ts";
-import { setRequires } from "../definition/decorators.ts";
+import { defineRequires } from "../definition/decorators.ts";
 import {
   type Providable,
   type ProvidableClass,
@@ -68,7 +68,7 @@ export const combine = <const TTargets extends Record<string, Class>>(
     }
   }
 
-  setRequires(CombineProvider, () => [Circuit]);
+  defineRequires(CombineProvider, () => [Circuit]);
 
   return CombineProvider;
 };

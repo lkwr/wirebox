@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import {
   Circuit,
-  setConditional,
-  setConditionalAsync,
-  setStandalone,
+  defineConditional,
+  defineConditionalAsync,
+  defineStandalone,
   unwire,
   withCircuit,
 } from "wirebox";
@@ -49,9 +49,11 @@ describe("Conditional", () => {
     const circuit = new Circuit();
     let isInMemory = true;
 
-    setConditional(PubSub, () => (isInMemory ? InMemoryPubSub : RedisPubSub));
-    setStandalone(InMemoryPubSub);
-    setStandalone(RedisPubSub);
+    defineConditional(PubSub, () =>
+      isInMemory ? InMemoryPubSub : RedisPubSub,
+    );
+    defineStandalone(InMemoryPubSub);
+    defineStandalone(RedisPubSub);
 
     expect(isInMemory).toBe(true);
 
@@ -76,8 +78,10 @@ describe("Conditional", () => {
     const circuit1 = new Circuit();
     const circuit2 = new Circuit();
 
-    setConditional(PubSub, () => withCircuit(circuit2, () => InMemoryPubSub));
-    setStandalone(InMemoryPubSub);
+    defineConditional(PubSub, () =>
+      withCircuit(circuit2, () => InMemoryPubSub),
+    );
+    defineStandalone(InMemoryPubSub);
 
     const instance1 = circuit1.tap(PubSub);
 
@@ -95,11 +99,11 @@ describe("Conditional", () => {
 
     const getIsInMemory = async () => Bun.sleep(10).then(() => isInMemory);
 
-    setConditionalAsync(PubSub, async () =>
+    defineConditionalAsync(PubSub, async () =>
       (await getIsInMemory()) ? InMemoryPubSub : RedisPubSub,
     );
-    setStandalone(InMemoryPubSub);
-    setStandalone(RedisPubSub);
+    defineStandalone(InMemoryPubSub);
+    defineStandalone(RedisPubSub);
 
     expect(isInMemory).toBe(true);
     expect(await getIsInMemory()).toBe(true);
@@ -127,10 +131,10 @@ describe("Conditional", () => {
     const circuit1 = new Circuit();
     const circuit2 = new Circuit();
 
-    setConditionalAsync(PubSub, () =>
+    defineConditionalAsync(PubSub, () =>
       Bun.sleep(10).then(() => withCircuit(circuit2, () => InMemoryPubSub)),
     );
-    setStandalone(InMemoryPubSub);
+    defineStandalone(InMemoryPubSub);
 
     const instance1 = await circuit1.tapAsync(PubSub);
 

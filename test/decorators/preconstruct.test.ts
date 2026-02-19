@@ -1,5 +1,5 @@
 import { describe, expect, mock, test } from "bun:test";
-import { Circuit, setPreconstruct, setStandalone, tap } from "wirebox";
+import { Circuit, definePreconstruct, defineStandalone, tap } from "wirebox";
 
 describe("Preconstruct", () => {
   test("basic preconstruct", () => {
@@ -9,7 +9,7 @@ describe("Preconstruct", () => {
 
     const preconstructFn = mock(() => new MyPreconstructedClass());
 
-    setPreconstruct(MyPreconstructedClass, preconstructFn);
+    definePreconstruct(MyPreconstructedClass, preconstructFn);
 
     const instance1 = tap(MyPreconstructedClass);
     expect(instance1).toBeInstanceOf(MyPreconstructedClass);
@@ -51,7 +51,7 @@ describe("Preconstruct", () => {
       selectedLoggerType === "console" ? new ConsoleLogger() : new FileLogger(),
     );
 
-    setPreconstruct(Logger, preconstructFn);
+    definePreconstruct(Logger, preconstructFn);
 
     const instance1 = tap(Logger);
     expect(instance1).toBeInstanceOf(ConsoleLogger);
@@ -93,14 +93,14 @@ describe("Preconstruct", () => {
       ) {}
     }
 
-    setStandalone(Dep1);
-    setStandalone(Dep2);
+    defineStandalone(Dep1);
+    defineStandalone(Dep2);
 
     const preconstructFn = mock(
       ([dep1, dep2]: readonly [Dep1, Dep2]) => new MyClass(dep2, dep1),
     );
 
-    setPreconstruct(MyClass, preconstructFn, () => [Dep1, Dep2]);
+    definePreconstruct(MyClass, preconstructFn, () => [Dep1, Dep2]);
 
     // pre-tap one dependency to test caching
     const dep2 = tap(Dep2);

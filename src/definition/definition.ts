@@ -18,8 +18,10 @@ export class WireDefinition {
   }
 
   singleton?: Circuit;
+
   dependencies?: () => readonly Class[];
   preloads?: () => readonly Class[];
+
   preconstructAsync?: (
     dependencies: readonly unknown[],
     context: Context,
@@ -28,7 +30,10 @@ export class WireDefinition {
     dependencies: readonly unknown[],
     context: Context,
   ) => unknown;
-  setup?: (() => void | Promise<void>) | (() => () => void | Promise<void>);
+
+  postconstructAsync?:
+    | (() => void | Promise<void>)
+    | (() => () => void | Promise<void>);
 
   isValid(): boolean {
     // cannot have both preconstruct and preconstructAsync
@@ -60,7 +65,7 @@ export class WireDefinition {
     );
   }
 
-  static set(
+  static define(
     target: Class,
     options: Partial<WireDefinition> = {},
   ): WireDefinition {
@@ -71,7 +76,8 @@ export class WireDefinition {
     if (options.preconstructAsync)
       definition.preconstructAsync = options.preconstructAsync;
     if (options.preconstruct) definition.preconstruct = options.preconstruct;
-    if (options.setup) definition.setup = options.setup;
+    if (options.postconstructAsync)
+      definition.postconstructAsync = options.postconstructAsync;
     if (options.singleton) definition.singleton = options.singleton;
 
     return definition;

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { Circuit, setStandalone } from "wirebox";
+import { Circuit, defineStandalone } from "wirebox";
 
 describe("Circuit", () => {
   test("default circuit", () => {
@@ -12,7 +12,7 @@ describe("Circuit", () => {
     class MyClass {
       name = "MyClass";
     }
-    setStandalone(MyClass);
+    defineStandalone(MyClass);
 
     const circuit1 = new Circuit();
     const instance1 = circuit1.tap(MyClass);

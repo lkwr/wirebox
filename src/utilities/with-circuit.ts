@@ -1,5 +1,5 @@
 import type { Circuit } from "../circuit.ts";
-import { setStandalone } from "../definition/decorators.ts";
+import { defineStandalone } from "../definition/decorators.ts";
 import {
   type Providable,
   type ProvidableClass,
@@ -39,7 +39,7 @@ export const withCircuit = <const TTarget extends Class>(
     }
   }
 
-  setStandalone(WithCircuit);
+  defineStandalone(WithCircuit);
 
   return WithCircuit;
 };

@@ -1,5 +1,5 @@
 import { getContext } from "../circuit.ts";
-import { setStandalone } from "../definition/decorators.ts";
+import { defineStandalone } from "../definition/decorators.ts";
 import type { Context } from "../types.ts";
 import { type Providable, type ProvidableClass, provide } from "./provider.ts";
 
@@ -36,7 +36,7 @@ export const createProvider = <const T>(
     };
   }
 
-  setStandalone(Provider);
+  defineStandalone(Provider);
 
   return Provider;
 };
@@ -60,7 +60,7 @@ export const createAsyncProvider = <const T>(
     };
   }
 
-  setStandalone(AsyncProvider);
+  defineStandalone(AsyncProvider);
 
   return AsyncProvider;
 };
@@ -77,7 +77,7 @@ export const createStaticProvider = <const T>(
     };
   }
 
-  setStandalone(Provider);
+  defineStandalone(Provider);
 
   return Provider;
 };
@@ -95,7 +95,7 @@ export const createAsyncStaticProvider = <const T>(
     };
   }
 
-  setStandalone(AsyncProvider);
+  defineStandalone(AsyncProvider);
 
   return AsyncProvider;
 };
@@ -112,7 +112,7 @@ export const createDynamicProvider = <const T>(
     };
   }
 
-  setStandalone(Provider);
+  defineStandalone(Provider);
 
   return Provider;
 };
@@ -130,7 +130,7 @@ export const createAsyncDynamicProvider = <const T>(
     };
   }
 
-  setStandalone(AsyncProvider);
+  defineStandalone(AsyncProvider);
 
   return AsyncProvider;
 };
