@@ -8,9 +8,9 @@ import {
   createDynamicProvider,
   createProvider,
   createStaticProvider,
+  defineStandalone,
   type Providable,
   provide,
-  setStandalone,
 } from "wirebox";
 
 describe("Provider", () => {
@@ -21,7 +21,7 @@ describe("Provider", () => {
       };
     }
 
-    setStandalone(Provider);
+    defineStandalone(Provider);
 
     const circuit = new Circuit();
     const instance = circuit.tap(Provider);
@@ -40,7 +40,7 @@ describe("Provider", () => {
       };
     }
 
-    setStandalone(AsyncProvider);
+    defineStandalone(AsyncProvider);
 
     const circuit = new Circuit();
     const instance = await circuit.tapAsync(AsyncProvider);
@@ -55,7 +55,7 @@ describe("Provider", () => {
       }
     }
 
-    setStandalone(Provider);
+    defineStandalone(Provider);
 
     const circuit = new Circuit();
     const instance = circuit.tap(Provider);

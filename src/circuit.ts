@@ -81,8 +81,9 @@ export class Circuit {
     if (definition.preconstructAsync)
       throw new AsyncDependencyError(target, false);
 
-    // if target has setup, throw an error
-    if (definition.setup) throw new AsyncDependencyError(target, false);
+    // if target has postconstructAsync, throw an error
+    if (definition.postconstructAsync)
+      throw new AsyncDependencyError(target, false);
 
     // resolve the inputs
     const inputs = this.#resolveDependencies(
@@ -150,19 +151,19 @@ export class Circuit {
 
       const instance = await instancePromise;
 
-      // if there is no setup, return the instance directly
-      if (!definition.setup) return instance;
+      // if there is no postconstructAsync, return the instance directly
+      if (!definition.postconstructAsync) return instance;
 
-      // run the setup
-      let setupPromise = definition.setup.bind(instance)();
+      // run the postconstruct
+      let postconstructPromise = definition.postconstructAsync.bind(instance)();
 
-      // if the setup result is a function, call it to get the actual promise
-      if (typeof setupPromise === "function") {
-        setupPromise = setupPromise.bind(instance)();
+      // if the postconstruct result is a function, call it to get the actual promise
+      if (typeof postconstructPromise === "function") {
+        postconstructPromise = postconstructPromise.bind(instance)();
       }
 
-      // wait for the setup to finish
-      await setupPromise;
+      // wait for the postconstruct to finish
+      await postconstructPromise;
 
       return instance;
     });
@@ -268,8 +269,8 @@ export class Circuit {
     // if target has async preconstruct, return true
     if (definition.preconstructAsync) return true;
 
-    // if target has setup, return true
-    if (definition.setup) return true;
+    // if target has async postconstruct, return true
+    if (definition.postconstructAsync) return true;
 
     const ctx = this.#createContext(target);
 

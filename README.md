@@ -166,19 +166,22 @@ If your runtime does not support decorators or you don't want to use them for so
 class MyClass {}
 
 // @standalone equivalent
-setStandalone(MyClass);
+defineStandalone(MyClass);
 
 // @requires equivalent
-setRequires(MyClass, () => [MyDependency]);
+defineRequires(MyClass, () => [MyDependency]);
 
 // @preconstruct equivalent
-setPreconstruct(MyClass, ([dep1]) => new MyClass(dep1), () => [MyDependency]);
+definePreconstruct(MyClass, ([dep1]) => new MyClass(dep1), () => [MyDependency]);
 
 // @preconstructAsync equivalent
-setPreconstructAsync(MyClass, async ([dep1]) => () => new MyClass(dep1), () => [MyDependency]);
+definePreconstructAsync(MyClass, async ([dep1]) => () => new MyClass(dep1), () => [MyDependency]);
+
+// @postconstructAsync equivalent (combinable with any of the above)
+definePostconstructAsync(MyClass, async function () { /* async setup */ });
 ```
 
-Every decorator alternative function takes exactly the same arguments as the decorators, except for the additional first target (class) argument. The naming is the same as the decorators but with the `@` replaced by `set` (and camelCased).
+Every decorator alternative function takes exactly the same arguments as the decorators, except for the additional first target (class) argument. The naming is the same as the decorators but prefixed with `define` (and camelCased).
 
 **Note:** These functions should only be called once and directly after the class declaration, otherwise they may not work as expected.
 
@@ -186,7 +189,7 @@ Every decorator alternative function takes exactly the same arguments as the dec
 
 The four decorators above can only be used once per class and you can not mix them! So using two of them at the same class will not work and also makes no sense.
 
-But there is currently one additional decorator which can be combined with any of the above decorators. It is the `@singleton` decorator.
+But there are currently two additional decorators which can be combined with any of the above decorators.
 
 ```ts
 import { standalone, singleton } from "wirebox";
@@ -204,7 +207,67 @@ The `@singleton` decorator is used to make a class a singleton. A singleton clas
 
 This decorator takes an optional `Circuit` as the first argument, which specifies which Circuit will be responsible to create the singleton instance. If no Circuit is specified, the default Circuit will be used (`Circuit.getDefault()`). Circuits will be explained in the next section.
 
-Also, there is a `setSingleton` function which can be used without decorators.
+There is also a `defineSingleton` function which can be used without decorators.
+
+##### Postconstruct Async
+
+The `@postconstructAsync` decorator allows you to run async initialization logic _after_ a class has been constructed. This is useful when your class needs to perform async setup (e.g. loading configuration, establishing connections) that cannot happen in the constructor.
+
+The setup argument can be:
+- A function that is called with `this` bound to the instance.
+- A function that returns another function, which is then called with `this` bound to the instance.
+- A method name (string or symbol) on the class prototype. Only methods with no parameters and a return type of `void` or `Promise<void>` are accepted.
+
+```ts
+import { standalone, postconstructAsync, tapAsync } from "wirebox";
+
+@standalone()
+@postconstructAsync("init")
+class MyService {
+  #config: Config | undefined;
+
+  get config(): Config {
+    if (!this.#config) throw new Error("MyService not initialized");
+    return this.#config;
+  }
+
+  async init() {
+    this.#config = await loadConfig();
+  }
+}
+
+const service = await tapAsync(MyService); // postconstruct runs after construction
+console.log(service.config); // config is loaded
+```
+
+Instead of a method name, you can also use the accessor pattern where the setup function returns the method to call:
+
+```ts
+@standalone()
+@postconstructAsync(() => MyService.prototype.init)
+class MyService {
+  // ...same as above
+}
+```
+
+Or use an inline function directly. Note that private fields (`#`) cannot be accessed from inline functions since they are lexically scoped to the class body — use conventional properties instead:
+
+```ts
+@standalone()
+@postconstructAsync(async function () {
+  // `this` is bound to the instance, but `this.#field` is not accessible here
+  this.initialized = true;
+})
+class MyService {
+  initialized = false;
+}
+```
+
+**Note:** There is no synchronous postconstruct decorator — for synchronous initialization logic, simply use the class constructor. The `@postconstructAsync` decorator exists specifically for async operations that cannot run in the constructor.
+
+Because `@postconstructAsync` involves async logic, you must use `tapAsync` to resolve the class. Using the synchronous `tap` will throw an error if the class has not been previously resolved.
+
+There is also a `definePostconstructAsync` function which can be used without decorators.
 
 ### 2. Tapping classes
 

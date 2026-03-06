@@ -25,14 +25,14 @@ export type ExtractProperties<T, V> = {
 };
 
 /**
- * A type representing a setup function for a class.
+ * A type representing a postconstruct function for a class.
  *
  * This can be:
  * - A function that returns a void promise and is bound to the instance.
  * - A function that returns another function which is bound to the instance and returns a void promise.
  * - A key of a method on the instance that returns a void promise.
  */
-export type Setupable<T extends Class> =
+export type Postcontructable<T extends Class> =
   | ((this: InstanceType<T>) => void | Promise<void>)
   | (() => (this: InstanceType<T>) => void | Promise<void>)
   | keyof ExtractProperties<

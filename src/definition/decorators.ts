@@ -1,5 +1,10 @@
 import { Circuit } from "../circuit.ts";
-import type { Class, Context, ResolvedInstances, Setupable } from "../types.ts";
+import type {
+  Class,
+  Context,
+  Postcontructable,
+  ResolvedInstances,
+} from "../types.ts";
 import { WireDefinition } from "./definition.ts";
 
 /**
@@ -24,14 +29,17 @@ export const isWired = (target: Class): boolean => {
 export const singleton =
   (circuit?: Circuit) =>
   <T extends Class>(target: T, _context: ClassDecoratorContext<T>) => {
-    setSingleton(target, circuit);
+    defineSingleton(target, circuit);
   };
 
 /**
- * @category Definition Setter
+ * @category Definition Function
  */
-export const setSingleton = <T extends Class>(target: T, circuit?: Circuit) => {
-  WireDefinition.set(target, {
+export const defineSingleton = <T extends Class>(
+  target: T,
+  circuit?: Circuit,
+) => {
+  WireDefinition.define(target, {
     singleton: circuit || Circuit.getDefault(),
   });
 };
@@ -49,20 +57,20 @@ export const requires =
     dependencies: () => TDeps,
   ) =>
   (target: TTarget, _context: ClassDecoratorContext<TTarget>) => {
-    setRequires(target, dependencies);
+    defineRequires(target, dependencies);
   };
 
 /**
- * @category Definition Setter
+ * @category Definition Function
  */
-export const setRequires = <
+export const defineRequires = <
   TTarget extends Class<ResolvedInstances<TDeps>>,
   const TDeps extends readonly Class[],
 >(
   target: TTarget,
   dependencies: () => TDeps,
 ) => {
-  WireDefinition.set(target, {
+  WireDefinition.define(target, {
     dependencies,
   });
 };
@@ -75,14 +83,14 @@ export const setRequires = <
 export const standalone =
   <T extends Class<readonly []>>() =>
   (target: T, _context: ClassDecoratorContext<T>) => {
-    setStandalone(target);
+    defineStandalone(target);
   };
 
 /**
- * @category Definition Setter
+ * @category Definition Function
  */
-export const setStandalone = <T extends Class<readonly []>>(target: T) => {
-  WireDefinition.set(target, {
+export const defineStandalone = <T extends Class<readonly []>>(target: T) => {
+  WireDefinition.define(target, {
     dependencies: () => [],
   });
 };
@@ -101,13 +109,13 @@ export const preconstruct =
     dependencies?: () => TDeps,
   ) =>
   (target: T, _context: ClassDecoratorContext<T>) => {
-    setPreconstruct(target, preconstruct, dependencies);
+    definePreconstruct(target, preconstruct, dependencies);
   };
 
 /**
- * @category Definition Setter
+ * @category Definition Function
  */
-export const setPreconstruct = <
+export const definePreconstruct = <
   T extends Class,
   const TDeps extends readonly Class[] = readonly [],
 >(
@@ -118,7 +126,7 @@ export const setPreconstruct = <
   ) => InstanceType<T>,
   dependencies?: () => TDeps,
 ) => {
-  WireDefinition.set(target, {
+  WireDefinition.define(target, {
     dependencies: dependencies ?? (() => []),
     preconstruct: preconstruct as WireDefinition["preconstruct"],
   });
@@ -138,13 +146,13 @@ export const preconstructAsync =
     dependencies?: () => TDeps,
   ) =>
   (target: T, _context: ClassDecoratorContext<T>) => {
-    setPreconstructAsync(target, preconstructAsync, dependencies);
+    definePreconstructAsync(target, preconstructAsync, dependencies);
   };
 
 /**
- * @category Definition Setter
+ * @category Definition Function
  */
-export const setPreconstructAsync = <
+export const definePreconstructAsync = <
   T extends Class<TDeps>,
   const TDeps extends readonly Class[] = readonly [],
 >(
@@ -155,7 +163,7 @@ export const setPreconstructAsync = <
   ) => Promise<() => InstanceType<T>>,
   dependencies?: () => TDeps,
 ) => {
-  WireDefinition.set(target, {
+  WireDefinition.define(target, {
     dependencies: dependencies ?? (() => []),
     preconstructAsync: preconstructAsync as WireDefinition["preconstructAsync"],
   });
@@ -166,20 +174,23 @@ export const setPreconstructAsync = <
 /**
  * @category Definition Decorator
  */
-export const setup =
-  <T extends Class, TSetup extends Setupable<T>>(setup: TSetup) =>
+export const postconstructAsync =
+  <T extends Class, TSetup extends Postcontructable<T>>(setup: TSetup) =>
   (target: T, _context: ClassDecoratorContext<T>) => {
-    setSetup(target, setup);
+    definePostconstructAsync(target, setup);
   };
 
 /**
- * @category Definition Setter
+ * @category Definition Function
  */
-export const setSetup = <T extends Class, TSetup extends Setupable<T>>(
+export const definePostconstructAsync = <
+  T extends Class,
+  TSetup extends Postcontructable<T>,
+>(
   target: T,
   setup: TSetup,
 ) => {
-  let setupFn: WireDefinition["setup"] | PropertyKey = setup;
+  let setupFn: WireDefinition["postconstructAsync"] | PropertyKey = setup;
 
   if (
     typeof setupFn === "string" ||
@@ -188,7 +199,9 @@ export const setSetup = <T extends Class, TSetup extends Setupable<T>>(
   )
     setupFn = target.prototype[setupFn];
 
-  WireDefinition.set(target, { setup: setupFn as WireDefinition["setup"] });
+  WireDefinition.define(target, {
+    postconstructAsync: setupFn as WireDefinition["postconstructAsync"],
+  });
 };
 
 // preloads
@@ -199,15 +212,15 @@ export const setSetup = <T extends Class, TSetup extends Setupable<T>>(
 export const preloads =
   <T extends Class>(preloads: () => readonly Class[]) =>
   (target: T, _context: ClassDecoratorContext<T>) => {
-    setPreloads(target, preloads);
+    definePreloads(target, preloads);
   };
 
 /**
- * @category Definition Setter
+ * @category Definition Function
  */
-export const setPreloads = <T extends Class>(
+export const definePreloads = <T extends Class>(
   target: T,
   preloads: () => readonly Class[],
 ) => {
-  WireDefinition.set(target, { preloads });
+  WireDefinition.define(target, { preloads });
 };

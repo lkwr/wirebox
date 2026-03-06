@@ -7,19 +7,19 @@ export {
   tapAsync,
 } from "./circuit.ts";
 export {
+  definePostconstructAsync,
+  definePreconstruct,
+  definePreconstructAsync,
+  definePreloads,
+  defineRequires,
+  defineSingleton,
+  defineStandalone,
   isWired,
+  postconstructAsync,
   preconstruct,
   preconstructAsync,
   preloads,
   requires,
-  setPreconstruct,
-  setPreconstructAsync,
-  setPreloads,
-  setRequires,
-  setSetup,
-  setSingleton,
-  setStandalone,
-  setup,
   singleton,
   standalone,
   unwire,
@@ -59,8 +59,8 @@ export { combine, type ResolvedCombine } from "./utilities/combine.ts";
 export {
   conditional,
   conditionalAsync,
-  setConditional,
-  setConditionalAsync,
+  defineConditional,
+  defineConditionalAsync,
 } from "./utilities/conditional.ts";
 export { lazy } from "./utilities/lazy.ts";
 export { withCircuit } from "./utilities/with-circuit.ts";

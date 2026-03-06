@@ -1,6 +1,6 @@
 import {
-  setPreconstruct,
-  setPreconstructAsync,
+  definePreconstruct,
+  definePreconstructAsync,
 } from "../definition/decorators.ts";
 import type { ProvidableClass } from "../provider/provider.ts";
 import type { Class, Context, ResolvedInstances } from "../types.ts";
@@ -25,13 +25,13 @@ export const conditional =
     dependencies?: () => TDeps,
   ) =>
   (target: T, _context: ClassDecoratorContext<T>) => {
-    setConditional(target, resolve, dependencies);
+    defineConditional(target, resolve, dependencies);
   };
 
 /**
  * @category Utility: Conditional
  */
-export const setConditional = <
+export const defineConditional = <
   T extends Class,
   const TDeps extends readonly Class[] = readonly [],
 >(
@@ -42,7 +42,7 @@ export const setConditional = <
   ) => ConditionalTarget<NoInfer<T>>,
   dependencies?: () => TDeps,
 ) => {
-  setPreconstruct(
+  definePreconstruct(
     target,
     (dependencies, context) => {
       const target = resolve(dependencies, context);
@@ -66,13 +66,13 @@ export const conditionalAsync =
     dependencies?: () => TDeps,
   ) =>
   (target: T, _context: ClassDecoratorContext<T>) => {
-    setConditionalAsync(target, resolveAsync, dependencies);
+    defineConditionalAsync(target, resolveAsync, dependencies);
   };
 
 /**
  * @category Utility: Conditional
  */
-export const setConditionalAsync = <
+export const defineConditionalAsync = <
   T extends Class,
   const TDeps extends readonly Class[] = readonly [],
 >(
@@ -83,7 +83,7 @@ export const setConditionalAsync = <
   ) => Promise<ConditionalTarget<NoInfer<T>>> | ConditionalTarget<NoInfer<T>>,
   dependencies?: () => TDeps,
 ) => {
-  setPreconstructAsync(
+  definePreconstructAsync(
     target,
     async (dependencies, context) => {
       const target = await resolveAsync(dependencies, context);
