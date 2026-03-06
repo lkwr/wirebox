@@ -23,8 +23,8 @@ const distPackage = {
   module: "./index.js",
   exports: {
     ".": {
-      import: "./index.js",
       types: "./index.d.ts",
+      default: "./index.js",
     },
     "./package.json": "./package.json",
   },
