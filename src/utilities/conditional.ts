@@ -24,7 +24,7 @@ export const conditional =
     ) => ConditionalTarget<NoInfer<T>>,
     dependencies?: () => TDeps,
   ) =>
-  (target: T, _context: ClassDecoratorContext<T>) => {
+  (target: T) => {
     defineConditional(target, resolve, dependencies);
   };
 
@@ -65,7 +65,7 @@ export const conditionalAsync =
     ) => Promise<ConditionalTarget<NoInfer<T>>> | ConditionalTarget<NoInfer<T>>,
     dependencies?: () => TDeps,
   ) =>
-  (target: T, _context: ClassDecoratorContext<T>) => {
+  (target: T) => {
     defineConditionalAsync(target, resolveAsync, dependencies);
   };
 

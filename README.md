@@ -9,7 +9,7 @@ A simple but flexible dependency injection library for TypeScript and JavaScript
 - **Type-Safe**: Fully utilizes TypeScript's strong typing system.
 - **Async Support**: Write async class initializers.
 - **Providers**: Utility to inject non-class values (even async ones).
-- **Decorators**: Use optional type-safe TC39 decorators to simplify your code.
+- **Decorators**: Use optional type-safe TC39 decorators or legacy decorators to simplify your code.
 
 ## 📦 Installation
 

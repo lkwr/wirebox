@@ -5,6 +5,7 @@
     "target": "esnext",
     "module": "nodenext",
     "moduleDetection": "force",
+    "types": ["bun"],
 
     // Bundler mode
     "moduleResolution": "nodenext",

@@ -28,7 +28,7 @@ export const isWired = (target: Class): boolean => {
  */
 export const singleton =
   (circuit?: Circuit) =>
-  <T extends Class>(target: T, _context: ClassDecoratorContext<T>) => {
+  <T extends Class>(target: T) => {
     defineSingleton(target, circuit);
   };
 
@@ -56,7 +56,7 @@ export const requires =
   >(
     dependencies: () => TDeps,
   ) =>
-  (target: TTarget, _context: ClassDecoratorContext<TTarget>) => {
+  (target: TTarget) => {
     defineRequires(target, dependencies);
   };
 
@@ -82,7 +82,7 @@ export const defineRequires = <
  */
 export const standalone =
   <T extends Class<readonly []>>() =>
-  (target: T, _context: ClassDecoratorContext<T>) => {
+  (target: T) => {
     defineStandalone(target);
   };
 
@@ -108,7 +108,7 @@ export const preconstruct =
     ) => InstanceType<T>,
     dependencies?: () => TDeps,
   ) =>
-  (target: T, _context: ClassDecoratorContext<T>) => {
+  (target: T) => {
     definePreconstruct(target, preconstruct, dependencies);
   };
 
@@ -145,7 +145,7 @@ export const preconstructAsync =
     ) => Promise<() => InstanceType<T>>,
     dependencies?: () => TDeps,
   ) =>
-  (target: T, _context: ClassDecoratorContext<T>) => {
+  (target: T) => {
     definePreconstructAsync(target, preconstructAsync, dependencies);
   };
 
@@ -176,7 +176,7 @@ export const definePreconstructAsync = <
  */
 export const postconstructAsync =
   <T extends Class, TSetup extends Postcontructable<T>>(setup: TSetup) =>
-  (target: T, _context: ClassDecoratorContext<T>) => {
+  (target: T) => {
     definePostconstructAsync(target, setup);
   };
 
@@ -211,7 +211,7 @@ export const definePostconstructAsync = <
  */
 export const preloads =
   <T extends Class>(preloads: () => readonly Class[]) =>
-  (target: T, _context: ClassDecoratorContext<T>) => {
+  (target: T) => {
     definePreloads(target, preloads);
   };
 
